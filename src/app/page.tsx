@@ -88,11 +88,11 @@ export default function Home() {
       { name: "Mobiles & Tablets", img: "/categories/mobiles.jpeg" },
       { name: "Fashion", img: "/categories/fashion.jpeg" },
       { name: "Electronics", img: "/categories/electronics.jpeg" },
-      { name: "Home & Furniture", img: "/categories/home.png" },
-      { name: "TVs & Appliances", img: "/categories/tv.png" },
-      { name: "Flight Bookings", img: "/categories/flight.png" },
-      { name: "Beauty, Food..", img: "/categories/beauty.png" },
-      { name: "Grocery", img: "/categories/grocery.png" },
+      { name: "Home & Furniture", img: "/categories/home.jpg" },
+      { name: "TVs & Appliances", img: "/categories/tv.jpg" },
+      { name: "Flight Bookings", img: "/categories/flight1.jpeg" },
+      { name: "Beauty, Food..", img: "/categories/beauty.jpeg" },
+      { name: "Grocery", img: "/categories/grocery.jpeg" },
     ].map((cat, i) => (
       <div
         key={i}
