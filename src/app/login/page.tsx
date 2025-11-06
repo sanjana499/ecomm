@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import Swal from "sweetalert2";
+import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, User, Menu, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -19,13 +22,30 @@ export default function LoginPage() {
       return;
     }
 
-    Swal.fire("Success", "Login successful!", "success");
-    // router.push("/");
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire("Success", "Login successful!", "success");
+        localStorage.setItem("user", JSON.stringify(data.user)); // save user session
+        router.push("/dashboard"); // ✅ Redirect to dashboard
+      } else {
+        Swal.fire("Error", data.message || "Invalid login", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Something went wrong", "error");
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 dark:bg-black font-sans">
-      
+    <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-black font-sans">
       {/* ✅ Navbar */}
       <nav className="w-full flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
         {/* Logo */}
@@ -45,10 +65,18 @@ export default function LoginPage() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="/" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Home</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Shop</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Categories</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Contact</a>
+          <Link href="/" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">
+            Home
+          </Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">
+            Shop
+          </Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">
+            Categories
+          </Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">
+            Contact
+          </Link>
         </div>
 
         {/* Right Section */}
@@ -84,14 +112,15 @@ export default function LoginPage() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="w-full flex flex-col mt-2 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6 bg-white dark:bg-zinc-900">
-          <a href="/" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Home</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Shop</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Categories</a>
-          <a href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Contact</a>
+          <Link href="/" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Home</Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Shop</Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Categories</Link>
+          <Link href="#" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Contact</Link>
+          <Link href="/login" className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600">Login</Link>
         </div>
       )}
 
-      {/* ✅ Login Form */}
+      {/* ✅ Login Form Section */}
       <main className="flex flex-col items-center justify-center flex-1 w-full p-6">
         <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8 mt-6">
           <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-6">
@@ -155,9 +184,9 @@ export default function LoginPage() {
           {/* Register link */}
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-4">
             Don’t have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
               Register
-            </a>
+            </Link>
           </p>
         </div>
       </main>

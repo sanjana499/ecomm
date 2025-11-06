@@ -82,6 +82,7 @@ export default function Home() {
           </div>
         )}
 
+<<<<<<< HEAD
         {/* ✅ Category Bar */}
         <div className="w-full bg-white dark:bg-zinc-900 py-4 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
           <div className="flex justify-center gap-10 overflow-x-auto px-6">
@@ -103,6 +104,33 @@ export default function Home() {
               </div>
             ))}
           </div>
+=======
+       {/* ✅ Category Bar */}
+<div className="w-full bg-white dark:bg-zinc-900 py-4 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
+  <div className="flex justify-center gap-10 overflow-x-auto px-6">
+    {[
+     
+      { name: "Mobiles & Tablets", img: "/categories/mobiles.jpeg" },
+      { name: "Fashion", img: "/categories/fashion.jpeg" },
+      { name: "Electronics", img: "/categories/electronics.jpeg" },
+      { name: "Home & Furniture", img: "/categories/home.jpg" },
+      { name: "TVs & Appliances", img: "/categories/tv.jpg" },
+      { name: "Flight Bookings", img: "/categories/flight1.jpeg" },
+      { name: "Beauty, Food..", img: "/categories/beauty.jpeg" },
+      { name: "Grocery", img: "/categories/grocery.jpeg" },
+    ].map((cat, i) => (
+      <div
+        key={i}
+        className="flex flex-col items-center text-center text-sm text-zinc-700 dark:text-zinc-300 hover:text-blue-600 cursor-pointer"
+      >
+        <div className="relative w-14 h-14 mb-2">
+          <Image
+            src={cat.img}
+            alt={cat.name}
+            fill
+            className="object-contain"
+          />
+>>>>>>> 8bd37c39fadbb44db30b2cd470e3a8bbad182c6e
         </div>
 
         {/* ✅ Flipkart-style Banner Slider */}
