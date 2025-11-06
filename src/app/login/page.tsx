@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,6 +24,7 @@ export default function LoginPage() {
     }
 
     try {
+      setLoading(true);
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,17 +32,19 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
+      setLoading(false);
 
       if (data.success) {
         Swal.fire("Success", "Login successful!", "success");
-        localStorage.setItem("user", JSON.stringify(data.user)); // save user session
-        router.push("/dashboard"); // ✅ Redirect to dashboard
+        localStorage.setItem("user", JSON.stringify(data.user));
+        router.push("/dashboard");
       } else {
         Swal.fire("Error", data.message || "Invalid login", "error");
       }
     } catch (err) {
       console.error(err);
       Swal.fire("Error", "Something went wrong", "error");
+      setLoading(false);
     }
   };
 
@@ -81,14 +85,12 @@ export default function LoginPage() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          {/* Search Bar */}
           <input
             type="text"
             placeholder="Search products..."
             className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
           />
 
-          {/* Icons */}
           <button className="relative">
             <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -99,7 +101,6 @@ export default function LoginPage() {
             <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
           </button>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -120,7 +121,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* ✅ Login Form Section */}
+      {/* ✅ Login Form */}
       <main className="flex flex-col items-center justify-center flex-1 w-full p-6">
         <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8 mt-6">
           <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-6">
@@ -165,23 +166,24 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Forgot password */}
+            {/* Forgot Password */}
             <div className="text-right">
               <a href="#" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
                 Forgot password?
               </a>
             </div>
 
-            {/* Login button */}
+            {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 
-          {/* Register link */}
+          {/* Register Link */}
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-4">
             Don’t have an account?{" "}
             <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
