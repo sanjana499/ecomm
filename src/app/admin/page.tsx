@@ -52,7 +52,7 @@ export default function LoginPage() {
       <main className="flex flex-col items-center justify-center w-full p-6">
         <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8">
           <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-6">
-            Login to <span className="text-blue-600">ShopEase</span>
+            Login to <span className="text-blue-600">Admin</span>
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,15 +97,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="text-right">
-              <Link
-                href="#"
-                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-              >
-                Forgot password?
-              </Link>
-            </div>
+           
 
             {/* Login Button */}
             <button
@@ -115,16 +107,17 @@ export default function LoginPage() {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
+
+             {/* Forgot Password */}
+             <div className="text-right">
+              <Link
+                href="#"
+                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
-
-               {/* Register Link */}
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-4">
-            Don’t have an account?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
-              Register
-            </Link>
-          </p>
-
         </div>
       </main>
     </div>

@@ -4,14 +4,18 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Sidebar from "@/app/components/Sidebar";
 import Topbar from "@/app/components/Topbar";
+import { Trash2 } from "lucide-react";
 
 export default function SubCategoryPage() {
   const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     parent_category_id: "",
     description: "",
+    category_name: "",
     status: "active",
   });
 
@@ -19,10 +23,19 @@ export default function SubCategoryPage() {
   const fetchSubCategories = async () => {
     const res = await fetch("/api/sub_categories");
     const data = await res.json();
-    setSubCategories(data);
+    console.log("data", data);
+    setSubCategories(Array.isArray(data) ? data : []);
+  };
+
+  // ✅ Fetch all categories
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    setCategories(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchSubCategories();
   }, []);
 
@@ -30,10 +43,19 @@ export default function SubCategoryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const payload = {
+      name: formData.name,
+      category_id: formData.parent_category_id, // ✅ send correct key name
+      description: formData.description,
+      status: formData.status,
+    };
+
+    console.log("Sending payload:", payload); // debug log
+
     const res = await fetch("/api/sub_categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -46,7 +68,13 @@ export default function SubCategoryPage() {
         timer: 1500,
         showConfirmButton: false,
       });
-      setFormData({ name: "", parent_category_id: "", description: "", status: "active" });
+      setFormData({
+        name: "",
+        parent_category_id: "",
+        description: "",
+        category_name: "",
+        status: "active",
+      });
       setShowForm(false);
       fetchSubCategories();
     } else {
@@ -58,25 +86,35 @@ export default function SubCategoryPage() {
     }
   };
 
+
   // ✅ Delete Subcategory
   const handleDelete = async (id: number) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
-      text: "This subcategory will be deleted.",
+      text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
     });
-
+  
     if (confirm.isConfirmed) {
-      const res = await fetch(`/api/sub_categories/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/sub_categories/${id}`, {
+        method: "DELETE",
+      });
+  
+      const data = await res.json();
+  
       if (res.ok) {
-        Swal.fire("Deleted!", "Subcategory deleted successfully.", "success");
+        Swal.fire("Deleted!", data.message, "success");
+        // ✅ Refresh list after delete
         fetchSubCategories();
+      } else {
+        Swal.fire("Error!", data.error || "Failed to delete", "error");
       }
     }
   };
-
   return (
     <div className="flex bg-white text-gray-800 min-h-screen">
       <Sidebar />
@@ -108,28 +146,44 @@ export default function SubCategoryPage() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
-              <input
-                type="number"
-                placeholder="Parent Category ID"
-                className="border rounded-md px-3 py-2"
+
+              {/* ✅ Category Dropdown */}
+              <select
+                className="border border-gray-300 rounded-lg px-4 py-2"
                 value={formData.parent_category_id}
-                onChange={(e) => setFormData({ ...formData, parent_category_id: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, parent_category_id: e.target.value })
+                }
                 required
-              />
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
               <textarea
                 placeholder="Description"
                 className="border rounded-md px-3 py-2 md:col-span-2"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
+
               <select
                 className="border rounded-md px-3 py-2"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+
               <button
                 type="submit"
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 md:col-span-2"
@@ -146,7 +200,7 @@ export default function SubCategoryPage() {
                 <tr>
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Parent ID</th>
+                  <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Description</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
@@ -158,26 +212,30 @@ export default function SubCategoryPage() {
                     <tr key={s.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-2">{i + 1}</td>
                       <td className="px-4 py-2 font-medium">{s.name}</td>
-                      <td className="px-4 py-2">{s.categories_id}</td>
+                      <td className="px-4 py-2">
+                        {categories.find((c) => c.id === s.categories_id)?.name || "-"}
+                      </td>
+
                       <td className="px-4 py-2 text-gray-600">{s.description}</td>
                       <td className="px-4 py-2">
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            s.status === "active"
+                          className={`px-2 py-1 text-xs rounded-full ${s.status === "active"
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-200 text-gray-600"
-                          }`}
+                            }`}
                         >
                           {s.status}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <button
+                      <button
                           onClick={() => handleDelete(s.id)}
-                          className="text-red-600 hover:underline text-sm"
+                          className="text-red-600 hover:text-red-800 transition-transform transform hover:scale-110 p-1"
+                          title="Delete"
                         >
-                          Delete
+                          <Trash2 className="w-5 h-5" />
                         </button>
+
                       </td>
                     </tr>
                   ))
