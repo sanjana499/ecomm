@@ -84,6 +84,8 @@ export default function ProductPage() {
                     <th className="px-6 py-3">Price</th>
                     <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Description</th>
+                    <th className="p-3 text-left">Color</th>
+                    <th className="p-3 text-left">Size</th> 
                     <th className="px-6 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
@@ -91,23 +93,23 @@ export default function ProductPage() {
                   {products.map((p, i) => (
                     <tr
                       key={p.id}
-                      className={`${
-                        i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } border-b hover:bg-blue-50 transition duration-150`}
+                      className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } border-b hover:bg-blue-50 transition duration-150`}
                     >
                       <td className="px-6 py-3">{i + 1}</td>
                       <td className="px-6 py-3 font-medium">{p.name}</td>
                       <td className="px-6 py-3">{p.category_id}</td>
                       <td className="px-6 py-3">{p.sub_category_id || "-"}</td>
+                      <td className="p-3">{p.color || "-"}</td> 
+                      <td className="p-3">{p.size || "-"}</td>  
                       <td className="px-6 py-3 font-semibold text-blue-700">
                         ₹{p.price}
                       </td>
                       <td
-                        className={`px-6 py-3 font-medium ${
-                          p.status === "active"
-                            ? "text-green-600"
-                            : "text-red-500"
-                        }`}
+                        className={`px-6 py-3 font-medium ${p.status === "active"
+                          ? "text-green-600"
+                          : "text-red-500"
+                          }`}
                       >
                         {p.status}
                       </td>

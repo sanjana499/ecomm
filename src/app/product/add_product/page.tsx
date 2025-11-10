@@ -17,6 +17,8 @@ export default function ProductPage() {
     subCategoryId: "",
     price: "",
     description: "",
+    color: "",
+    size: "",
   });
 
   useEffect(() => {
@@ -55,6 +57,8 @@ export default function ProductPage() {
       price: formData.price,
 
       description: formData.description,
+      color: formData.color,
+      size: formData.size,
     };
 
     const res = await fetch(url, {
@@ -96,38 +100,23 @@ export default function ProductPage() {
         <Topbar />
 
         <div className="p-8 bg-gray-50 min-h-screen">
-
-
           <div className="flex items-center justify-between mb-6 p-4 rounded-lg ">
             <h1 className="text-3xl font-bold text-gray-800">Add Products</h1>
-
           </div>
-
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-wrap gap-4 border border-gray-100"
+            className="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-gray-100"
           >
-            <input
-              type="text"
-              placeholder="Product Name"
-              className="border border-gray-300 rounded-lg px-4 py-2 flex-1"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              required
-            />
-
             {/* Category Dropdown */}
             <select
-              className="border border-gray-300 rounded-lg px-4 py-2 flex-1"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.categoryId}
               onChange={(e) => {
                 const selectedCategory = e.target.value;
                 setFormData({
                   ...formData,
                   categoryId: selectedCategory,
-                  subCategoryId: "", // reset subcategory when category changes
+                  subCategoryId: "",
                 });
                 fetchSubcategories(selectedCategory);
               }}
@@ -141,14 +130,14 @@ export default function ProductPage() {
               ))}
             </select>
 
-            {/* Subcategory Dropdown (depends on Category) */}
+            {/* Subcategory Dropdown */}
             <select
-              className="border border-gray-300 rounded-lg px-4 py-2 flex-1"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.subCategoryId}
               onChange={(e) =>
                 setFormData({ ...formData, subCategoryId: e.target.value })
               }
-              disabled={!formData.categoryId} // disable until category selected
+              disabled={!formData.categoryId}
             >
               <option value="">Select Subcategory</option>
               {subcategories.map((sub) => (
@@ -158,46 +147,79 @@ export default function ProductPage() {
               ))}
             </select>
 
+            <input
+              type="text"
+              placeholder="Product Name"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
 
             <input
               type="number"
               placeholder="Price"
-              className="border border-gray-300 rounded-lg px-4 py-2 w-40"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.price}
-              onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
             />
 
-            <textarea
-              placeholder="Description"
-              className="border border-gray-300 rounded-lg px-4 py-2 w-full min-h-[100px]"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-            ></textarea>
-
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold shadow-sm"
+            <select
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
             >
-              {editId ? "Update" : "Save"}
-            </button>
+              <option value="">Select Color</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+              <option value="Black">Black</option>
+              <option value="White">White</option>
+            </select>
 
-            {/* Cancel Button */}
-            <button
-              type="button"
-              onClick={() => router.push("/product")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400 transition font-semibold shadow-sm"
+            <select
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              value={formData.size}
+              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
             >
-              Cancel
-            </button>
+              <option value="">Select Size</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+            </select>
 
+            {/* Description full width */}
+            <div className="md:col-span-3">
+              <textarea
+                placeholder="Description"
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full min-h-[100px]"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              ></textarea>
+            </div>
+
+            {/* Buttons full width */}
+            <div className="flex gap-4 md:col-span-3">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold shadow-sm"
+              >
+                {editId ? "Update" : "Save"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/product")}
+                className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400 transition font-semibold shadow-sm"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
-
-
 
         </div>
       </div>

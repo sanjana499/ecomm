@@ -4,18 +4,18 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Sidebar from "@/app/components/Sidebar";
 import Topbar from "@/app/components/Topbar";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 export default function SubCategoryPage() {
   const [subCategories, setSubCategories] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
     parent_category_id: "",
     description: "",
-    category_name: "",
     status: "active",
   });
 
@@ -23,7 +23,6 @@ export default function SubCategoryPage() {
   const fetchSubCategories = async () => {
     const res = await fetch("/api/sub_categories");
     const data = await res.json();
-    console.log("data", data);
     setSubCategories(Array.isArray(data) ? data : []);
   };
 
@@ -39,21 +38,23 @@ export default function SubCategoryPage() {
     fetchSubCategories();
   }, []);
 
-  // ✅ Handle form submit
+  // ✅ Handle form submit (Add / Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const payload = {
       name: formData.name,
-      category_id: formData.parent_category_id, // ✅ send correct key name
+      category_id: formData.parent_category_id,
       description: formData.description,
       status: formData.status,
     };
 
-    console.log("Sending payload:", payload); // debug log
+    const url = editId
+      ? `/api/sub_categories/${editId}`
+      : "/api/sub_categories";
 
-    const res = await fetch("/api/sub_categories", {
-      method: "POST",
+    const res = await fetch(url, {
+      method: editId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -63,8 +64,7 @@ export default function SubCategoryPage() {
     if (res.ok) {
       Swal.fire({
         icon: "success",
-        title: "Subcategory Added!",
-        text: "Subcategory created successfully.",
+        title: editId ? "Subcategory Updated!" : "Subcategory Added!",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -72,10 +72,10 @@ export default function SubCategoryPage() {
         name: "",
         parent_category_id: "",
         description: "",
-        category_name: "",
         status: "active",
       });
-      setShowForm(false);
+      setShowModal(false);
+      setEditId(null);
       fetchSubCategories();
     } else {
       Swal.fire({
@@ -85,7 +85,6 @@ export default function SubCategoryPage() {
       });
     }
   };
-
 
   // ✅ Delete Subcategory
   const handleDelete = async (id: number) => {
@@ -98,23 +97,45 @@ export default function SubCategoryPage() {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
     });
-  
+
     if (confirm.isConfirmed) {
       const res = await fetch(`/api/sub_categories/${id}`, {
         method: "DELETE",
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         Swal.fire("Deleted!", data.message, "success");
-        // ✅ Refresh list after delete
         fetchSubCategories();
       } else {
         Swal.fire("Error!", data.error || "Failed to delete", "error");
       }
     }
   };
+
+  // ✅ Open modal for Add/Edit
+  const openModal = (subCategory?: any) => {
+    if (subCategory) {
+      setEditId(subCategory.id);
+      setFormData({
+        name: subCategory.name,
+        parent_category_id: subCategory.categories_id || "",
+        description: subCategory.description || "",
+        status: subCategory.status || "active",
+      });
+    } else {
+      setEditId(null);
+      setFormData({
+        name: "",
+        parent_category_id: "",
+        description: "",
+        status: "active",
+      });
+    }
+    setShowModal(true);
+  };
+
   return (
     <div className="flex bg-white text-gray-800 min-h-screen">
       <Sidebar />
@@ -125,73 +146,12 @@ export default function SubCategoryPage() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Sub Categories</h1>
             <button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => openModal()}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
             >
-              {showForm ? "Cancel" : "Add Sub Category"}
+              Add Sub Category
             </button>
           </div>
-
-          {/* ✅ Add Sub Category Form */}
-          {showForm && (
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <input
-                type="text"
-                placeholder="Sub Category Name"
-                className="border rounded-md px-3 py-2"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-
-              {/* ✅ Category Dropdown */}
-              <select
-                className="border border-gray-300 rounded-lg px-4 py-2"
-                value={formData.parent_category_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, parent_category_id: e.target.value })
-                }
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-
-              <textarea
-                placeholder="Description"
-                className="border rounded-md px-3 py-2 md:col-span-2"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-
-              <select
-                className="border rounded-md px-3 py-2"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 md:col-span-2"
-              >
-                Save Sub Category
-              </button>
-            </form>
-          )}
 
           {/* ✅ Sub Category Table */}
           <div className="bg-white rounded-lg shadow-md overflow-x-auto">
@@ -213,35 +173,45 @@ export default function SubCategoryPage() {
                       <td className="px-4 py-2">{i + 1}</td>
                       <td className="px-4 py-2 font-medium">{s.name}</td>
                       <td className="px-4 py-2">
-                        {categories.find((c) => c.id === s.categories_id)?.name || "-"}
+                        {categories.find((c) => c.id === s.categories_id)?.name ||
+                          "-"}
                       </td>
-
-                      <td className="px-4 py-2 text-gray-600">{s.description}</td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {s.description}
+                      </td>
                       <td className="px-4 py-2">
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${s.status === "active"
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            s.status === "active"
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-200 text-gray-600"
-                            }`}
+                          }`}
                         >
                           {s.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-right">
-                      <button
+                      <td className="px-4 py-2 text-right flex gap-2 justify-end">
+                        <button
+                          onClick={() => openModal(s)}
+                          className="text-blue-600 hover:text-blue-800 transition"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
                           onClick={() => handleDelete(s.id)}
-                          className="text-red-600 hover:text-red-800 transition-transform transform hover:scale-110 p-1"
-                          title="Delete"
+                          className="text-red-600 hover:text-red-800 transition"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
-
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center py-4 text-gray-500 italic">
+                    <td
+                      colSpan={6}
+                      className="text-center py-4 text-gray-500 italic"
+                    >
                       No subcategories available
                     </td>
                   </tr>
@@ -251,6 +221,85 @@ export default function SubCategoryPage() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Popup Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+            <h2 className="text-xl font-semibold mb-4">
+              {editId ? "Edit Sub Category" : "Add Sub Category"}
+            </h2>
+
+            <form onSubmit={handleSubmit} className="grid gap-4">
+              <select
+                className="border border-gray-300 rounded-lg px-4 py-2"
+                value={formData.parent_category_id}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    parent_category_id: e.target.value,
+                  })
+                }
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                placeholder="Sub Category Name"
+                className="border rounded-md px-3 py-2"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
+
+              <textarea
+                placeholder="Description"
+                className="border rounded-md px-3 py-2"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+
+              <select
+                className="border rounded-md px-3 py-2"
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {editId ? "Update" : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

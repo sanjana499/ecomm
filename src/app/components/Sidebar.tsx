@@ -16,6 +16,7 @@ import {
 export default function Sidebar() {
   const [active, setActive] = useState("Dashboard");
   const [isMasterOpen, setIsMasterOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const router = useRouter();
 
   const menu = [
@@ -27,13 +28,10 @@ export default function Sidebar() {
   ];
 
   const handleLogout = () => {
-    // ✅ Clear local/session storage if needed
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
-
-    // ✅ Redirect to login page
-    router.push("/login");
+    router.push("/");
   };
 
   return (
@@ -46,28 +44,115 @@ export default function Sidebar() {
 
         {/* ✅ Menu Items */}
         <div className="p-4 flex flex-col gap-1">
-          {menu.map((item) => {
-            const Icon = item.icon;
-            const isActive = active === item.name;
+          {/* Dashboard */}
+          <button
+            onClick={() => {
+              setActive("Dashboard");
+              router.push("/dashboard");
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+              active === "Dashboard"
+                ? "bg-green-100 text-green-700 font-semibold shadow-sm"
+                : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+            }`}
+          >
+            <LayoutDashboard size={18} />
+            <span>Dashboard</span>
+          </button>
 
-            return (
-              <button
-                key={item.name}
-                onClick={() => {
-                  setActive(item.name);
-                  router.push(`/${item.name.toLowerCase()}`); // ✅ navigate to matching page
-                }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
-                  isActive
-                    ? "bg-green-100 text-green-700 font-semibold shadow-sm"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
-                }`}
-              >
-                <Icon size={18} />
-                <span>{item.name}</span>
-              </button>
-            );
-          })}
+          {/* ✅ Orders Dropdown */}
+          <div>
+            <button
+              onClick={() => setIsOrdersOpen(!isOrdersOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-all duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <Package size={18} />
+                <span>Orders</span>
+              </div>
+              {isOrdersOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+
+            {isOrdersOpen && (
+              <div className="ml-8 mt-2 flex flex-col gap-1">
+                <button
+                  onClick={() => {
+                    setActive("Order List");
+                    router.push("/orders/list");
+                  }}
+                  className={`text-sm px-3 py-1.5 rounded-md text-left ${
+                    active === "Order List"
+                      ? "bg-green-100 text-green-700 font-semibold"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Order List
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActive("Order Details");
+                    router.push("/orders/details");
+                  }}
+                  className={`text-sm px-3 py-1.5 rounded-md text-left ${
+                    active === "Order Details"
+                      ? "bg-green-100 text-green-700 font-semibold"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  Order Details
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ✅ Product */}
+          <button
+            onClick={() => {
+              setActive("Product");
+              router.push("/product");
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+              active === "Product"
+                ? "bg-green-100 text-green-700 font-semibold shadow-sm"
+                : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+            }`}
+          >
+            <Package size={18} />
+            <span>Product</span>
+          </button>
+
+          {/* ✅ Customers */}
+          <button
+            onClick={() => {
+              setActive("Customers");
+              router.push("/customers");
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+              active === "Customers"
+                ? "bg-green-100 text-green-700 font-semibold shadow-sm"
+                : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+            }`}
+          >
+            <Users size={18} />
+            <span>Customers</span>
+          </button>
+
+          {/* ✅ Analytics */}
+          <button
+            onClick={() => {
+              setActive("Analytics");
+              router.push("/analytics");
+            }}
+            className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+              active === "Analytics"
+                ? "bg-green-100 text-green-700 font-semibold shadow-sm"
+                : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+            }`}
+          >
+            <BarChart2 size={18} />
+            <span>Analytics</span>
+          </button>
 
           {/* ✅ Master Dropdown */}
           <div>
@@ -86,7 +171,6 @@ export default function Sidebar() {
               )}
             </button>
 
-            {/* ✅ Dropdown Items */}
             {isMasterOpen && (
               <div className="ml-8 mt-2 flex flex-col gap-1">
                 <button
@@ -105,7 +189,7 @@ export default function Sidebar() {
 
                 <button
                   onClick={() => {
-                    setActive("Sub categories");
+                    setActive("Sub Category");
                     router.push("/master/sub_categories");
                   }}
                   className={`text-sm px-3 py-1.5 rounded-md text-left ${
@@ -116,9 +200,6 @@ export default function Sidebar() {
                 >
                   Sub Category
                 </button>
-
-                
-
               </div>
             )}
           </div>

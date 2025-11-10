@@ -27,6 +27,8 @@ export const products = mysqlTable("products", {
   price: varchar("price", { length: 100 }).notNull(),
   status: drizzleEnum("status", ["active", "inactive"]).default("inactive").notNull(),
   description: text("description"),
+  color: varchar("color", { length: 100 }),  // ✅ new field
+  size: varchar("size", { length: 50 }),    // ✅ new field
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").onUpdateNow().defaultNow(),
   deleted_at: timestamp("deleted_at"),

@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       sub_category_id,
       price,
       description,
+      color, size
     } = body;
 
     await db.insert(products).values({
@@ -34,6 +35,8 @@ export async function POST(req: Request) {
       price,
       status: "inactive",
       description,
+      color, // ✅ add this
+      size,  // ✅ add this
     });
 
     return NextResponse.json({ message: "Product added successfully!" });
