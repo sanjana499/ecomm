@@ -1,249 +1,217 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { ShoppingCart, User, Menu } from "lucide-react";
+import Swal from "sweetalert2";
+import { Menu, ShoppingCart, User } from "lucide-react";
 
 export default function CartPage() {
-    const [quantity, setQuantity] = useState(1);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const product = {
-        id: 1,
-        title: "Kaira Women Floral Print Straight Kurta",
-        color: "Light Blue",
-        size: "XS",
-        seller: "Kairab",
-        price: 1299,
-        offerPrice: 280,
-        deliveryDate: "Sat Nov 15",
-        img: "/uploads/images/download.jpeg",
-    };
+  // 🧩 Fetch Cart Items
+  useEffect(() => {
+    async function fetchCart() {
+      try {
+        const res = await fetch("/api/cart");
+        const data = await res.json();
+        if (res.ok) setCartItems(data.items);
+      } catch (error) {
+        Swal.fire("Error", "Failed to load cart items", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCart();
+  }, []);
 
-    const discount = product.price - product.offerPrice;
-    const coupons = 20;
-    const platformFee = 5;
-    const total = product.offerPrice - coupons + platformFee;
+  // 🗑️ Remove Item from Cart
+  const removeFromCart = async (id: number) => {
+    const confirm = await Swal.fire({
+      title: "Remove Item?",
+      text: "Are you sure you want to remove this item from your cart?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, remove it",
+      cancelButtonText: "Cancel",
+    });
 
-    return (
-        <div>
-            {/* Navbar */}
-            <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 px-6 py-3">
-                <div className="flex items-center h-5 gap-3">
-                    <div className="relative w-20 h-20">
-                        <Image
-                            src="/logo (1).png"
-                            alt="Logo"
-                            fill
-                            className="object-contain rounded-md"
-                        />
-                    </div>
-                    <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
-                        ShopEase
-                    </h1>
-                </div>
+    if (!confirm.isConfirmed) return;
 
-                {/* Desktop Menu */}
-                <div className="hidden md:flex items-center gap-6">
-                    {["Home", "Men's", "Women's", "Contact"].map((item) => (
-                        <a
-                            key={item}
-                            href="/"
-                            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-                        >
-                            {item}
-                        </a>
-                    ))}
-                    <a
-                        href="/login"
-                        className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-                    >
-                        Login
-                    </a>
-                </div>
+    try {
+      const res = await fetch(`/api/cart/${id}`, {
+        method: "DELETE",
+      });
 
-                {/* Right Icons */}
-                <div className="flex items-center gap-4">
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
-                    />
+      if (res.ok) {
+        setCartItems((prev) => prev.filter((item) => item.id !== id));
+        Swal.fire("Removed!", "Item removed from cart.", "success");
+      } else {
+        Swal.fire("Error", "Failed to remove item", "error");
+      }
+    } catch (error) {
+      Swal.fire("Error", "Something went wrong", "error");
+    }
+  };
 
-                    <button className="relative">
-                        <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                            2
-                        </span>
-                    </button>
-                    <button>
-                        <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-                    </button>
+  if (loading) return <p className="text-center mt-10 text-gray-500">Loading cart...</p>;
+  if (cartItems.length === 0)
+    return <p className="text-center mt-10 text-gray-500">Your cart is empty.</p>;
 
-                    <button
-                        className="md:hidden"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    >
-                        <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-                    </button>
-                </div>
-            </nav>
+  // 💰 Calculate total
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.offerPrice ?? item.price) * (item.quantity ?? 1),
+    0
+  );
+  const shipping = subtotal > 1000 ? 0 : 99;
+  const total = subtotal + shipping;
 
-            {/* Mobile Menu */}
-            {isMenuOpen && (
-                <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6">
-                    {["Home", "Men's", "Women's", "Contact"].map((item) => (
-                        <a
-                            key={item}
-                            href="/"
-                            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-                        >
-                            {item}
-                        </a>
-                    ))}
-                </div>
-            )}
-
-            {/* Main Content */}
-            <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Left Section */}
-                    <div className="flex-1 bg-white p-4 rounded-lg shadow-sm">
-                        <h2 className="text-lg font-semibold border-b pb-3 mb-4">
-                            Flipkart (1)
-                        </h2>
-
-                        {/* Delivery Info */}
-                        <div className="flex justify-between items-center border-b pb-3 mb-4">
-                            <div>
-                                <p className="font-medium">
-                                    Deliver to:{" "}
-                                    <span className="text-blue-600">
-                                        Sanjana, 273001
-                                    </span>
-                                </p>
-                                <p className="text-gray-600 text-sm">
-                                    Government girls hostel near Vishnu Mandir, Medical Road...
-                                </p>
-                            </div>
-                            <button className="text-blue-600 border border-blue-600 rounded-md px-3 py-1 text-sm">
-                                Change
-                            </button>
-                        </div>
-
-                        {/* Product Info */}
-                        <div className="flex gap-4 border-b pb-4 mb-4">
-                            <div className="relative w-24 h-32">
-                                <Image
-                                    src={product.img}
-                                    alt={product.title}
-                                    fill
-                                    className="object-cover rounded-md"
-                                />
-                            </div>
-
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-gray-800">
-                                    {product.title}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Size: {product.size}, {product.color}
-                                </p>
-                                <p className="text-sm text-gray-600 mb-2">
-                                    Seller: {product.seller}{" "}
-                                    <span className="text-blue-600 text-xs font-medium">
-                                        Assured
-                                    </span>
-                                </p>
-                                <p className="text-sm text-gray-600 mb-2">
-                                    Delivery by{" "}
-                                    <span className="font-medium">
-                                        {product.deliveryDate}
-                                    </span>
-                                </p>
-
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-semibold text-green-600">
-                                        ₹{product.offerPrice}
-                                    </span>
-                                    <span className="line-through text-gray-400 text-sm">
-                                        ₹{product.price}
-                                    </span>
-                                    <span className="text-green-600 text-sm font-medium">
-                                        78% Off
-                                    </span>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                    Or Pay ₹250 + 30
-                                </p>
-
-                                {/* Quantity Controls */}
-                                <div className="flex items-center gap-3 mt-2">
-                                    <button
-                                        className="border rounded-full px-2"
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    >
-                                        −
-                                    </button>
-                                    <span className="font-medium">{quantity}</span>
-                                    <button
-                                        className="border rounded-full px-2"
-                                        onClick={() => setQuantity(quantity + 1)}
-                                    >
-                                        +
-                                    </button>
-                                    <button className="ml-6 text-blue-600 text-sm">
-                                        SAVE FOR LATER
-                                    </button>
-                                    <button className="text-blue-600 text-sm">REMOVE</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ✅ Place Order Button (Right aligned) */}
-                        <div className="flex justify-end">
-                            <button className="bg-orange-500 text-white font-medium py-2 w-48 rounded-md hover:bg-orange-600 transition">
-                                PLACE ORDER
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Right Section — Price Details */}
-                    <div className="w-full lg:w-1/3 bg-white p-4 rounded-lg shadow-sm h-fit">
-                        <h3 className="text-lg font-semibold border-b pb-3 mb-4">
-                            PRICE DETAILS
-                        </h3>
-                        <div className="space-y-2 text-sm text-gray-700">
-                            <div className="flex justify-between">
-                                <span>Price (1 item)</span>
-                                <span>₹{product.price}</span>
-                            </div>
-                            <div className="flex justify-between text-green-600">
-                                <span>Discount</span>
-                                <span>-₹{discount}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Coupons for you</span>
-                                <span>-₹{coupons}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Platform Fee</span>
-                                <span>₹{platformFee}</span>
-                            </div>
-                        </div>
-
-                        <hr className="my-3" />
-                        <div className="flex justify-between font-semibold text-gray-800">
-                            <span>Total Amount</span>
-                            <span>₹{total}</span>
-                        </div>
-                        <p className="text-green-600 text-sm mt-2">
-                            You will save ₹{discount + coupons} on this order
-                        </p>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div>
+      {/* 🔹 Top Navbar */}
+      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 px-6 py-3">
+        <div className="flex items-center h-5 gap-3">
+          <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
+            ShopEase
+          </h1>
         </div>
-    );
+
+        {/* 🔹 Desktop Menu */}
+        <div className="hidden md:flex items-center gap-6">
+          {["Home", "Men's", "Women's", "Contact"].map((item) => (
+            <a
+              key={item}
+              href="/"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+            >
+              {item}
+            </a>
+          ))}
+          <a
+            href="/login"
+            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+          >
+            Login
+          </a>
+        </div>
+
+        {/* 🔹 Right Icons */}
+        <div className="flex items-center gap-4">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
+          />
+
+          <button className="relative">
+            <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {cartItems.length}
+            </span>
+          </button>
+
+          <button>
+            <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          </button>
+
+          <button
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          </button>
+        </div>
+      </nav>
+
+      {/* 🔹 Mobile Menu */}
+      {isMenuOpen && (
+        <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6">
+          {["Home", "Men's", "Women's", "Contact"].map((item) => (
+            <a
+              key={item}
+              href="/"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+            >
+              {item}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* 🛒 Cart + Payment Section */}
+      <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 🧾 Cart Items (Left 2/3) */}
+        <div className="md:col-span-2">
+          <h2 className="text-xl font-semibold mb-4">🛒 My Cart</h2>
+          {cartItems.map((item) => (
+            <div
+              key={item.id}
+              className="flex gap-4 mb-4 bg-white p-4 rounded-md shadow-sm items-center justify-between"
+            >
+              <div className="flex gap-4 items-center">
+                <div className="relative w-24 h-24">
+                  <Image
+                    src={item.img?.startsWith("/upload") ? item.img : `/upload/${item.img}`}
+                    alt={item.title}
+                    fill
+                    className="object-contain rounded-md"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-800">{item.title}</h3>
+                  <p className="text-sm text-gray-600">
+                    Size: {item.size} | Color: {item.color}
+                  </p>
+                  <p className="text-sm text-gray-500">Qty: {item.quantity ?? 1}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-green-600 font-bold text-lg">
+                      ₹{item.offerPrice ?? item.price}
+                    </span>
+                    {item.offerPrice && (
+                      <span className="text-gray-400 line-through text-sm">
+                        ₹{item.price}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 🗑️ Remove button */}
+              <button
+                onClick={() => removeFromCart(item.id)}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* 💳 Payment Summary (Right 1/3) */}
+        <div className="bg-white p-6 rounded-md shadow-md h-fit">
+          <h3 className="text-lg font-semibold mb-4">💰 Payment Details</h3>
+          <div className="flex justify-between mb-2 text-gray-700">
+            <span>Subtotal</span>
+            <span>₹{subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between mb-2 text-gray-700">
+            <span>Shipping</span>
+            <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold border-t pt-3 mt-3">
+            <span>Total</span>
+            <span>₹{total.toFixed(2)}</span>
+          </div>
+
+          <button
+            onClick={() => Swal.fire("Proceeding to Payment", "Redirecting...", "info")}
+            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold"
+          >
+            Proceed to Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

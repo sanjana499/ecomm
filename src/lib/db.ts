@@ -1,8 +1,9 @@
-// lib/db.ts
+
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
+import * as schema from "@/lib/schema"; // ✅ import schema
 
-// connect to MySQL
+// 🧩 Create MySQL connection
 const connection = await mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
@@ -10,4 +11,8 @@ const connection = await mysql.createConnection({
   database: process.env.DB_NAME || "shop_ease",
 });
 
-export const db = drizzle(connection);
+// ✅ Pass both `schema` and `mode` to drizzle
+export const db = drizzle(connection, {
+  schema,
+  mode: "default", // ✅ required for standard MySQL (not PlanetScale)
+});

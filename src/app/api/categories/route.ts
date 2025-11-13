@@ -1,24 +1,37 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { categories } from "@/lib/schema";
 import path from "path";
+import { eq } from "drizzle-orm";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { categories, sub_categories } from "@/lib/schema";
 
 // ✅ GET — Fetch all categories
 export async function GET() {
   try {
-    const data = await db.select().from(categories).orderBy(categories.id);
-    return NextResponse.json(data);
-  } catch (err: any) {
-    console.error("GET /api/categories error:", err);
+    const allCategories = await db.select().from(categories);
+
+    const result = await Promise.all(
+      allCategories.map(async (cat) => {
+        const subs = await db
+          .select()
+          .from(sub_categories)
+          .where(eq(sub_categories.categories_id, cat.id)); // ✅ correct column
+
+        // Always return subcategories array (even if empty)
+        return { ...cat, subcategories: subs || [] };
+      })
+    );
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
     return NextResponse.json(
-      { error: "Failed to fetch categories", details: err.message },
+      { error: "Failed to load categories" },
       { status: 500 }
     );
   }
 }
-
 // ✅ POST — Add a new category with image upload
 export async function POST(req: Request) {
   try {
@@ -28,42 +41,39 @@ export async function POST(req: Request) {
     const status = formData.get("status") as string;
     const file = formData.get("image") as File | null;
 
-    // ✅ Validation
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    // ✅ Ensure upload directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    const uploadDir = path.join(process.cwd(), "public", "upload");
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
     }
 
-    // ✅ Handle file upload
     let imagePath = "";
     if (file && file.size > 0) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const fileName = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
       const uploadPath = path.join(uploadDir, fileName);
-
       await writeFile(uploadPath, buffer);
-      imagePath = `/uploads/${fileName}`;
+      imagePath = `/upload/${fileName}`;
     }
 
-    // ✅ Normalize status to boolean (true = active, false = inactive)
+    // ✅ Normalize status
     const normalizedStatus =
       status === "active" || status === "true" || status === "1" ? true : false;
 
-    console.log("🟩 Received status value:", status);
-    console.log("✅ Normalized status (boolean):", normalizedStatus);
+    // ✅ Generate slug automatically
+    const slug = name.toLowerCase().replace(/\s+/g, "-");
 
     // ✅ Insert into DB
     await db.insert(categories).values({
       name: name.trim(),
       description: description || "",
-      status: normalizedStatus, // now stores true/false
+      status: normalizedStatus,
       image: imagePath,
+      slug, // ✅ include slug field
     });
 
     return NextResponse.json({
@@ -73,10 +83,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error("POST /api/categories error:", err);
     return NextResponse.json(
-      {
-        error: "Failed to add category",
-        details: err.message,
-      },
+      { error: "Failed to add category", details: err.message },
       { status: 500 }
     );
   }

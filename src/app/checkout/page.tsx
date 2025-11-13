@@ -1,25 +1,57 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { ShoppingCart, User, Menu } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import { ShoppingCart, User, Menu } from "lucide-react"; // ✅ added missing imports
 
 export default function CheckoutPage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+  const [total] = useState(285); // Later you can calculate dynamically
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ added missing state
+
+  // ✅ Fetch address list
+  useEffect(() => {
+    fetch("/api/address")
+      .then(async (res) => {
+        console.log("Response status:", res.status);
+        const data = await res.json();
+        console.log("Address data:", data);
+        setAddresses(data);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        Swal.fire("Error", "Failed to load addresses", "error");
+      });
+  }, []);
+
+  // ✅ Place order handler
+  const placeOrder = async () => {
+    if (!selectedAddress) {
+      Swal.fire("Select Address", "Please choose a delivery address", "warning");
+      return;
+    }
+
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: 1, addressId: selectedAddress, total }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      Swal.fire("Order Placed!", "Your order has been successfully placed.", "success");
+    } else {
+      Swal.fire("Error", data.error || "Failed to place order", "error");
+    }
+  };
 
   return (
-    <>
-      {/* ✅ Navbar */}
-      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 px-6 py-3 bg-white">
-        <div className="flex items-center h-5 gap-3">
-          <div className="relative w-20 h-20">
-            <Image
-              src="/logo (1).png"
-              alt="Logo"
-              fill
-              className="object-contain rounded-md"
-            />
-          </div>
+    <div className="min-h-screen bg-gray-100 p-6">
+      {/* 🔹 Navbar */}
+      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2 mb-6">
+        <div className="flex items-center h-5">
+          <div className="relative w-[100px] h-[100px]"></div>
           <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
             ShopEase
           </h1>
@@ -30,7 +62,7 @@ export default function CheckoutPage() {
           {["Home", "Men's", "Women's", "Contact"].map((item) => (
             <a
               key={item}
-              href="/"
+              href="#"
               className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
             >
               {item}
@@ -44,7 +76,7 @@ export default function CheckoutPage() {
           </a>
         </div>
 
-        {/* Right Icons */}
+        {/* Icons */}
         <div className="flex items-center gap-4">
           <input
             type="text"
@@ -73,11 +105,11 @@ export default function CheckoutPage() {
 
       {/* ✅ Mobile Menu */}
       {isMenuOpen && (
-        <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6 bg-white">
+        <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 mb-6">
           {["Home", "Men's", "Women's", "Contact"].map((item) => (
             <a
               key={item}
-              href="/"
+              href="#"
               className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
             >
               {item}
@@ -86,56 +118,67 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {/* ✅ Checkout Page Layout */}
-      <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row p-6">
-        {/* Left Section */}
-        <div className="flex-1 bg-white shadow-md rounded-lg p-6 mb-4 md:mb-0 md:mr-4">
-          <h2 className="text-lg font-semibold mb-4">Delivery Address</h2>
+      {/* ✅ Checkout Layout */}
+      <div className="min-h-screen bg-gray-100 flex justify-center items-start p-6">
+        <div className="w-full max-w-5xl flex flex-col md:flex-row gap-4">
+          {/* Left Section: Address */}
+          <div className="flex-1 bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Delivery Address</h2>
+            {addresses.map((addr) => (
+              <div
+                key={addr.id}
+                className={`border p-4 rounded-md mb-3 ${
+                  selectedAddress === addr.id
+                    ? "border-blue-500"
+                    : "border-gray-300"
+                }`}
+              >
+                <p className="font-medium">
+                  {addr.name} {addr.phone}
+                </p>
+                <p>{addr.address}</p>
+                <p>
+                  {addr.city}, {addr.state} - {addr.pincode}
+                </p>
 
-          <div className="border p-4 rounded-md mb-3">
-            <p className="font-medium">Sanjana 6005193936</p>
-            <p>
-              Government Girls Hostel near Vishnu Mandir, Medical Road, Asuran
-              Chowk, Gorakhpur, Uttar Pradesh - 273001
-            </p>
-            <button className="mt-3 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition">
-              Deliver Here
+                <button
+                  onClick={() => setSelectedAddress(addr.id)}
+                  className="mt-3 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition"
+                >
+                  Deliver Here
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Right Section: Price Details */}
+          <div className="w-full md:w-72 bg-white shadow-md rounded-lg p-6 h-fit">
+            <h2 className="text-lg font-semibold mb-4">Price Details</h2>
+
+            <div className="space-y-2 text-gray-700">
+              <div className="flex justify-between">
+                <span>Price (1 item)</span>
+                <span>₹280</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Platform Fee</span>
+                <span>₹5</span>
+              </div>
+              <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between font-semibold">
+                <span>Total Payable</span>
+                <span>₹{total}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={placeOrder}
+              className="mt-6 bg-yellow-500 text-white w-full py-2 rounded-md font-medium hover:bg-yellow-600 transition"
+            >
+              PLACE ORDER
             </button>
           </div>
-
-          <div className="border p-4 rounded-md">
-            <p className="font-medium">Antika Prasad 9919536576</p>
-            <p>
-              Mahuawa Khurd, Sohang Kushinagar, Jokwa Bazar ke Aage,
-              Fazilanagar, Uttar Pradesh - 274401
-            </p>
-          </div>
-        </div>
-
-        {/* Right Section */}
-        <div className="w-full md:w-80 bg-white shadow-md rounded-lg p-6 h-fit">
-          <h2 className="text-lg font-semibold mb-4">Price Details</h2>
-
-          <div className="space-y-2 text-gray-700">
-            <div className="flex justify-between">
-              <span>Price (1 item)</span>
-              <span>₹280</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Platform Fee</span>
-              <span>₹5</span>
-            </div>
-            <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between font-semibold">
-              <span>Total Payable</span>
-              <span>₹285</span>
-            </div>
-          </div>
-
-          <button className="mt-6 bg-orange-500 text-white w-full py-3 rounded-md font-medium hover:bg-orange-600 transition">
-            PLACE ORDER
-          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

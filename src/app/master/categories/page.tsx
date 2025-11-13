@@ -49,6 +49,8 @@ export default function CategoryPage() {
         method: "POST",
         body: fd,
       });
+      const slug = formData.name.toLowerCase().replace(/[' ]+/g, "-");
+      fd.append("slug", slug);
 
       const data = await res.json();
       console.log("data", data);
@@ -117,7 +119,7 @@ export default function CategoryPage() {
                   <th className="px-4 py-2 text-left">#</th>
                   <th className="px-4 py-2 text-left">Name</th>
                   <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Image</th>
+                  {/* <th className="px-4 py-2 text-left">Image</th> */}
                   <th className="px-4 py-2 text-left">Description</th>
                   <th className="px-4 py-2 text-left">Actions</th>
                 </tr>
@@ -127,12 +129,15 @@ export default function CategoryPage() {
                   categories.map((c, i) => (
                     <tr key={c.id || i} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-2">{i + 1}</td>
-                      <td className="px-4 py-2 font-medium">{c.name}</td>
+                      <td className="px-4 py-2 font-medium text-blue-600 hover:underline cursor-pointer"
+                        onClick={() => router.push(`/category/${c.slug}`)}>
+                        {c.name}
+                      </td>
                       <td className="px-4 py-2">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${c.status === true || c.status === "active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                             }`}
                         >
                           {c.status === true || c.status === "active"
@@ -140,7 +145,7 @@ export default function CategoryPage() {
                             : "Inactive"}
                         </span>
                       </td>
-                      <td className="px-4 py-2">
+                      {/* <td className="px-4 py-2">
                         {c.image ? (
                           <img
                             src={c.image}
@@ -150,7 +155,7 @@ export default function CategoryPage() {
                         ) : (
                           "-"
                         )}
-                      </td>
+                      </td> */}
                       <td className="px-4 py-2 text-gray-600">
                         {c.description || "-"}
                       </td>
@@ -212,14 +217,14 @@ export default function CategoryPage() {
                     />
 
                     {/* ✅ Image Upload */}
-                    <input
+                    {/* <input
                       type="file"
                       accept="image/*"
                       className="border border-gray-300 px-3 py-2 rounded-md"
                       onChange={(e) =>
                         setImageFile(e.target.files ? e.target.files[0] : null)
                       }
-                    />
+                    /> */}
                   </div>
 
                   {/* ✅ Description */}

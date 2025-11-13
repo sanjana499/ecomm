@@ -10,17 +10,23 @@ export default function ProductPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
+  const [image, setImage] = useState<File | null>(null);
   const router = useRouter();
+
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     categoryId: "",
     subCategoryId: "",
     price: "",
+    offerPrice: "",
+    quantity: "",
     description: "",
+    desc: "",
     color: "",
     size: "",
   });
 
+  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -33,7 +39,7 @@ export default function ProductPage() {
 
   const fetchSubcategories = async (categoryId: string) => {
     if (!categoryId) {
-      setSubcategories([]); // clear subcategories if no category selected
+      setSubcategories([]);
       return;
     }
     const res = await fetch(`/api/sub_categories?categoryId=${categoryId}`);
@@ -41,30 +47,28 @@ export default function ProductPage() {
     setSubcategories(data);
   };
 
-
-
-  // ✅ Add or update product
+  // ✅ Handle Form Submit (with image upload)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Always POST (no edit logic)
-    const url = `/api/product`;
+    const form = new FormData();
+    form.append("title", formData.title);
+    form.append("category_id", formData.categoryId);
+    form.append("sub_category_id", formData.subCategoryId || "");
+    form.append("price", formData.price);
+    form.append("offerPrice", formData.offerPrice || "");
+    form.append("quantity", formData.quantity || "0");
+    form.append("description", formData.description);
+    form.append("desc", formData.desc);
+    form.append("color", formData.color);
+    form.append("size", formData.size);
 
-    const payload = {
-      name: formData.name,
-      category_id: Number(formData.categoryId),
-      sub_category_id: formData.subCategoryId ? Number(formData.subCategoryId) : null,
-      price: formData.price,
+    // ✅ Must match backend name exactly: "img"
+    if (image) form.append("img", image);
 
-      description: formData.description,
-      color: formData.color,
-      size: formData.size,
-    };
-
-    const res = await fetch(url, {
+    const res = await fetch(`/api/product`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: form,
     });
 
     const data = await res.json();
@@ -77,19 +81,13 @@ export default function ProductPage() {
         timer: 1500,
         showConfirmButton: false,
       });
-
-      // ✅ Reset form
-
-      setTimeout(() => {
-        router.push("/product");
-      }, 1500);
+      setTimeout(() => router.push("/product"), 1500);
     } else {
       Swal.fire({
         icon: "error",
         title: "Failed!",
         text: data.error || "Something went wrong.",
       });
-
     }
   };
 
@@ -100,9 +98,10 @@ export default function ProductPage() {
         <Topbar />
 
         <div className="p-8 bg-gray-50 min-h-screen">
-          <div className="flex items-center justify-between mb-6 p-4 rounded-lg ">
-            <h1 className="text-3xl font-bold text-gray-800">Add Products</h1>
+          <div className="flex items-center justify-between mb-6 p-4 rounded-lg">
+            <h1 className="text-3xl font-bold text-gray-800">Add Product</h1>
           </div>
+
           <form
             onSubmit={handleSubmit}
             className="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-gray-100"
@@ -147,28 +146,89 @@ export default function ProductPage() {
               ))}
             </select>
 
+            {/* Product Title */}
             <input
               type="text"
-              placeholder="Product Name"
+              placeholder="Product Title"
               className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               required
             />
 
+            {/* Price */}
             <input
               type="number"
               placeholder="Price"
               className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
               required
             />
 
+            {/* Offer Price */}
+            <input
+              type="number"
+              placeholder="Offer Price"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              value={formData.offerPrice}
+              onChange={(e) =>
+                setFormData({ ...formData, offerPrice: e.target.value })
+              }
+            />
+
+            <input type="file" accept="image/*"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              onChange={(e) =>
+                setImage(e.target.files ? e.target.files[0] : null)
+              } />
+            {image && (
+              <p className="text-sm text-green-600 mt-1">
+                Selected: {image.name}
+              </p>
+            )}
+            {/* Image Upload */}
+            {/* <div className="md:col-span-3">
+              <label className="block text-gray-700 font-medium mb-2">
+                Product Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setImage(e.target.files ? e.target.files[0] : null)
+                }
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              />
+              {image && (
+                <p className="text-sm text-green-600 mt-1">
+                  Selected: {image.name}
+                </p>
+              )}
+            </div> */}
+
+            {/* Quantity */}
+            <input
+              type="number"
+              placeholder="Quantity"
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+              value={formData.quantity}
+              onChange={(e) =>
+                setFormData({ ...formData, quantity: e.target.value })
+              }
+            />
+
+            {/* Color */}
             <select
               className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, color: e.target.value })
+              }
             >
               <option value="">Select Color</option>
               <option value="Red">Red</option>
@@ -178,10 +238,13 @@ export default function ProductPage() {
               <option value="White">White</option>
             </select>
 
+            {/* Size */}
             <select
               className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               value={formData.size}
-              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, size: e.target.value })
+              }
             >
               <option value="">Select Size</option>
               <option value="S">S</option>
@@ -190,19 +253,31 @@ export default function ProductPage() {
               <option value="XL">XL</option>
             </select>
 
-            {/* Description full width */}
+            {/* Description */}
             <div className="md:col-span-3">
               <textarea
                 placeholder="Description"
-                className="border border-gray-300 rounded-lg px-4 py-2 w-full min-h-[100px]"
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full min-h-20"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-              ></textarea>
+              />
             </div>
 
-            {/* Buttons full width */}
+            {/* Short Description */}
+            <div className="md:col-span-3">
+              <textarea
+                placeholder="Short Description (desc)"
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full min-h-[60px]"
+                value={formData.desc}
+                onChange={(e) =>
+                  setFormData({ ...formData, desc: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Buttons */}
             <div className="flex gap-4 md:col-span-3">
               <button
                 type="submit"
@@ -220,7 +295,6 @@ export default function ProductPage() {
               </button>
             </div>
           </form>
-
         </div>
       </div>
     </div>

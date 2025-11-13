@@ -11,10 +11,14 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  PlusCircle,
+  ChevronUp,
+  
 } from "lucide-react";
 
 export default function Sidebar() {
   const [active, setActive] = useState("Dashboard");
+  const [openDropdown, setOpenDropdown] = useState(false);
   const [isMasterOpen, setIsMasterOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const router = useRouter();
@@ -107,20 +111,58 @@ export default function Sidebar() {
           </div>
 
           {/* ✅ Product */}
+          <div className="space-y-2">
+      {/* Main Product Button */}
+      <button
+        onClick={() => setOpenDropdown(!openDropdown)}
+        className={`flex items-center justify-between w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+          active === "Product"
+            ? "bg-green-100 text-green-700 font-semibold shadow-sm"
+            : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <Package size={18} />
+          <span>Product</span>
+        </div>
+        {openDropdown ? <ChevronUp size={16} /> : <ChevronRight size={16} />}
+      </button>
+
+      {/* Dropdown Items */}
+      {openDropdown && (
+        <div className="ml-10 space-y-1">
           <button
             onClick={() => {
-              setActive("Product");
-              router.push("/product");
+              setActive("Add Product");
+              router.push("/product/add_product");
             }}
-            className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
-              active === "Product"
-                ? "bg-green-100 text-green-700 font-semibold shadow-sm"
-                : "text-gray-700 hover:bg-gray-100 hover:text-green-600"
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+              active === "Add Product"
+                ? "bg-green-100 text-green-700 font-medium"
+                : "text-gray-600 hover:bg-gray-100 hover:text-green-600"
             }`}
           >
-            <Package size={18} />
-            <span>Product</span>
+            <PlusCircle size={16} />
+            <span>Add Product</span>
           </button>
+
+          <button
+            onClick={() => {
+              setActive("Product List");
+              router.push("/product");
+            }}
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+              active === "Product List"
+                ? "bg-green-100 text-green-700 font-medium"
+                : "text-gray-600 hover:bg-gray-100 hover:text-green-600"
+            }`}
+          >
+            <Package size={16} />
+            <span>Product List</span>
+          </button>
+        </div>
+      )}
+    </div>
 
           {/* ✅ Customers */}
           <button

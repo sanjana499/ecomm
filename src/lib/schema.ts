@@ -1,14 +1,16 @@
 // lib/db/schema.ts
+// lib/db/schema.ts
 import {
   mysqlTable,
   int,
   varchar,
   text,
   timestamp,
-  mysqlEnum as drizzleEnum,
+  mysqlEnum as drizzleEnum, 
+  decimal,
   boolean,
+  serial,
 } from "drizzle-orm/mysql-core";
-
 
 // ✅ Users Table
 export const users = mysqlTable("users", {
@@ -19,23 +21,34 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ✅ Products Table
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  img: varchar("img", { length: 255 }).notNull(),
   category_id: int("category_id").notNull(),
   sub_category_id: int("sub_category_id"),
-  price: varchar("price", { length: 100 }).notNull(),
-  status: drizzleEnum("status", ["active", "inactive"]).default("inactive").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  status: drizzleEnum("status", ["active", "inactive"])
+    .default("inactive")
+    .notNull(),
   description: text("description"),
-  color: varchar("color", { length: 100 }),  // ✅ new field
-  size: varchar("size", { length: 50 }),    // ✅ new field
+  color: varchar("color", { length: 100 }),
+  size: varchar("size", { length: 50 }),
+  quantity: int("quantity").default(0),
+  offerPrice: decimal("offer_price", { precision: 10, scale: 2 }),
+  desc: text("desc"),
+  gender: varchar("gender", { length: 20 }),
+  type: varchar("type", { length: 50 }),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").onUpdateNow().defaultNow(),
   deleted_at: timestamp("deleted_at"),
 });
+
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(), // ✅ add this
   description: text("description"),
   status: boolean("status").notNull().default(true).$type<boolean>(), 
   image: varchar("image", { length: 500 }),
@@ -54,6 +67,33 @@ export const sub_categories = mysqlTable("sub_categories",{
   updated_at: timestamp("updated_at").onUpdateNow().defaultNow(),
   deleted_at: timestamp("deleted_at"),
 })
+
+export const cart = mysqlTable("cart", {
+  id: serial("id").primaryKey(),
+  userId: int("user_id").notNull(), // if you have user login
+  productId: int("product_id").notNull(),
+  quantity: int("quantity").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const addresses = mysqlTable("addresses", {
+  id: serial("id").primaryKey(),
+  userId: int("user_id"),
+  name: varchar("name", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  pincode: varchar("pincode", { length: 10 }),
+});
+
+export const orders1 = mysqlTable("orders", {
+  id: serial("id").primaryKey(),
+  userId: int("user_id"),
+  addressId: int("address_id"),
+  total: int("total"),
+  status: varchar("status", { length: 20 }).default("pending"),
+});
 
 function mysqlEnum(arg0: string, arg1: string[]) {
   throw new Error("Function not implemented.");
