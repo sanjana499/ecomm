@@ -4,7 +4,7 @@ import { categories, products, sub_categories } from "@/lib/schema";
 import { writeFile, mkdir, chmod } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { eq } from "drizzle-orm";
+import { eq ,desc} from "drizzle-orm";
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -107,8 +107,6 @@ export async function POST(req: NextRequest) {
 }
 
 
-// 🟣 GET ALL PRODUCTS
-// ===============================
 // 📦 GET — Fetch all products
 // ===============================
 export async function GET() {
@@ -135,8 +133,10 @@ export async function GET() {
       })
       .from(products)
       .leftJoin(categories, eq(products.category_id, categories.id))
-      .leftJoin(sub_categories, eq(products.sub_category_id, sub_categories.id));
+      .leftJoin(sub_categories, eq(products.sub_category_id, sub_categories.id))
+      .orderBy(desc(products.id)); // ✅ latest products appear first
 
+    // 🧠 Generate unique filter data
     const filters = {
       colors: [...new Set(allProducts.map((p) => p.color).filter(Boolean))],
       sizes: [...new Set(allProducts.map((p) => p.size).filter(Boolean))],

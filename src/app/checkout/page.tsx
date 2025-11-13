@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import Swal from "sweetalert2";
-import { ShoppingCart, User, Menu } from "lucide-react"; // ✅ added missing imports
+import { ShoppingCart, User, Menu ,ChevronDown, ChevronRight } from "lucide-react"; // ✅ added missing imports
 
 export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [total] = useState(285); // Later you can calculate dynamically
   const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ added missing state
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
 
   // ✅ Fetch address list
   useEffect(() => {
@@ -46,62 +51,138 @@ export default function CheckoutPage() {
     }
   };
 
+  useEffect(() => {
+      fetch("/api/categories")
+        .then((res) => res.json())
+        .then((data) => setCategories(data))
+        .catch(() =>
+          Swal.fire("Error", "Failed to load categories", "error")
+        );
+    }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       {/* 🔹 Navbar */}
-      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2 mb-6">
-        <div className="flex items-center h-5">
-          <div className="relative w-[100px] h-[100px]"></div>
-          <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
-            ShopEase
-          </h1>
-        </div>
+      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2">
+          <div className="flex items-center h-5">
+            <div className="relative w-[100px] h-[100px]">
+              {/* Optional logo */}
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
+              ShopEase
+            </h1>
+          </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          {["Home", "Men's", "Women's", "Contact"].map((item) => (
+          <div className="hidden md:flex items-center gap-6 relative">
+            {["Home", "Contact"].map((item) => (
+              <a
+                key={item}
+                href="/"
+                className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+              >
+                {item}
+              </a>
+            ))}
+
+            {/* Category Dropdown */}
+            <div
+              className="relative z-50"
+              onMouseEnter={() => {
+                clearTimeout((window as any).dropdownTimer);
+                setOpenDropdown(true);
+              }}
+              onMouseLeave={() => {
+                (window as any).dropdownTimer = setTimeout(() => {
+                  setOpenDropdown(false);
+                  setActiveCategory(null);
+                }, 150);
+              }}
+            >
+              <button
+                className="flex items-center text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+                onClick={() => setOpenDropdown(!openDropdown)}
+              >
+                Categories
+                <ChevronDown
+                  className={`ml-1 h-4 w-4 transition-transform ${openDropdown ? "rotate-180" : ""
+                    }`}
+                />
+              </button>
+
+              {openDropdown && (
+                <div className="absolute left-0 mt-2 flex bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 z-50">
+                  {/* Left - main categories */}
+                  <div className="w-44 border-r dark:border-zinc-700">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat.id}
+                        className={`flex justify-between items-center px-4 py-2 text-sm cursor-pointer ${activeCategory === cat.name
+                          ? "bg-blue-100 dark:bg-zinc-700 text-blue-700"
+                          : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-zinc-700"
+                          }`}
+                        onMouseEnter={() => setActiveCategory(cat.name)}
+                      >
+                        {cat.name}
+                        <ChevronRight className="h-4 w-4" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right - subcategories */}
+                  {activeCategory && (
+                    <div className="w-52">
+                      {categories
+                        .find((cat) => cat.name === activeCategory)
+                        ?.subcategories.map((sub: any) => (
+                          <Link
+                            key={sub.id}
+                            href={`/category/slippers/${sub.id}`} // ✅ correct dynamic route
+                            className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-700"
+                            onClick={() => setOpenDropdown(false)}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </div>
+
             <a
-              key={item}
-              href="#"
+              href="/login"
               className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
             >
-              {item}
+              Login
             </a>
-          ))}
-          <a
-            href="/login"
-            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-          >
-            Login
-          </a>
-        </div>
+          </div>
 
-        {/* Icons */}
-        <div className="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
-          />
+          <div className="flex items-center gap-4">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
+            />
 
-          <button className="relative">
-            <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-              2
-            </span>
-          </button>
-          <button>
-            <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-          </button>
+            <button className="relative">
+              <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                2
+              </span>
+            </button>
+            <button>
+              <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+            </button>
 
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-          </button>
-        </div>
-      </nav>
+            <button
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+            </button>
+          </div>
+        </nav>
 
       {/* ✅ Mobile Menu */}
       {isMenuOpen && (
@@ -109,7 +190,7 @@ export default function CheckoutPage() {
           {["Home", "Men's", "Women's", "Contact"].map((item) => (
             <a
               key={item}
-              href="#"
+              href="/"
               className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
             >
               {item}

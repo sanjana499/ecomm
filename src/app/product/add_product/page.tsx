@@ -186,11 +186,11 @@ export default function ProductPage() {
               onChange={(e) =>
                 setImage(e.target.files ? e.target.files[0] : null)
               } />
-            {image && (
+            {/* {image && (
               <p className="text-sm text-green-600 mt-1">
                 Selected: {image.name}
               </p>
-            )}
+            )} */}
             {/* Image Upload */}
             {/* <div className="md:col-span-3">
               <label className="block text-gray-700 font-medium mb-2">

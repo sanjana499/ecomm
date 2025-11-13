@@ -23,8 +23,6 @@ export default function Home() {
       );
   }, []);
 
-
-
   interface Product {
     id: Key | null | undefined;
     title: string;
@@ -204,7 +202,7 @@ export default function Home() {
             {["Home", "Men's", "Women's", "Contact"].map((item) => (
               <a
                 key={item}
-                href="#"
+                href="/"
                 className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
               >
                 {item}
@@ -267,61 +265,61 @@ export default function Home() {
 
         {/* ✅ Top Deals Section */}
         <section className="w-full bg-white mt-8 rounded-md shadow-sm p-6">
-  <div className="flex justify-between items-center px-2 mb-6">
-    <h2 className="text-2xl font-semibold text-gray-800">Top Deals</h2>
-    <a href="#" className="text-blue-600 font-medium hover:underline">
-      View All
-    </a>
-  </div>
+          <div className="flex justify-between items-center px-2 mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">Top Deals</h2>
+            <a href="#" className="text-blue-600 font-medium hover:underline">
+              View All
+            </a>
+          </div>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-    {Array.isArray(dealsData) && dealsData.length > 0 ? (
-      dealsData.map((product: Product) => {
-        // ✅ Convert to numbers to avoid type errors
-        const price = Number(product.price) || 0;
-        const offerPrice = Number(product.offerPrice) || 0;
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {Array.isArray(dealsData) && dealsData.length > 0 ? (
+              dealsData.map((product: Product) => {
+                // ✅ Convert to numbers to avoid type errors
+                const price = Number(product.price) || 0;
+                const offerPrice = Number(product.offerPrice) || 0;
 
-        // ✅ Calculate discount %
-        const discountPercent =
-          price > 0 ? Math.round(((price - offerPrice) / price) * 100) : 0;
+                // ✅ Calculate discount %
+                const discountPercent =
+                  price > 0 ? Math.round(((price - offerPrice) / price) * 100) : 0;
 
-        return (
-          <Link
-            key={product.id}
-            href={`/category/slippers/${product.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-gray-200 rounded-lg shadow-sm p-4 hover:shadow-md transition-transform hover:-translate-y-1 bg-white block"
-          >
-            {/* Product Image */}
-            <div className="relative w-full h-[180px] mb-3">
-              <Image
-                src={product.img}
-                alt={product.title}
-                fill
-                className="object-contain rounded-md bg-gray-100"
-              />
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/category/slippers/${product.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-gray-200 rounded-lg shadow-sm p-4 hover:shadow-md transition-transform hover:-translate-y-1 bg-white block"
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-full h-[180px] mb-3">
+                      <Image
+                        src={product.img}
+                        alt={product.title}
+                        fill
+                        className="object-contain rounded-md bg-gray-100"
+                      />
 
-              {/* ✅ Discount badge */}
-              {discountPercent > 0 && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                  {discountPercent}% OFF
-                </div>
-              )}
-            </div>
+                      {/* ✅ Discount badge */}
+                      {discountPercent > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                          {discountPercent}% OFF
+                        </div>
+                      )}
+                    </div>
 
-            {/* ✅ Product Title */}
-            <h3 className="text-lg font-semibold text-gray-800 text-center line-clamp-2">
-              {product.title}
-            </h3>
-          </Link>
-        );
-      })
-    ) : (
-      <p>No deals found.</p>
-    )}
-  </div>
-</section>
+                    {/* ✅ Product Title */}
+                    <h3 className="text-lg font-semibold text-gray-800 text-center line-clamp-2">
+                      {product.title}
+                    </h3>
+                  </Link>
+                );
+              })
+            ) : (
+              <p>No deals found.</p>
+            )}
+          </div>
+        </section>
 
 
       </main>
