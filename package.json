@@ -1,0 +1,35 @@
+{
+  "name": "ecomm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "clean": "rimraf .next node_modules && npm install"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.44.7",
+    "lucide-react": "^0.552.0",
+    "mysql2": "^3.15.3",
+    "next": "16.0.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "sweetalert2": "^11.26.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "rimraf": "^6.1.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

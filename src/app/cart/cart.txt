@@ -1,0 +1,213 @@
+onClick={() => Swal.fire("Proceeding to Payment", "Redirecting...", "info")}
+
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Swal from "sweetalert2";
+import { Menu, ShoppingCart, User, ChevronDown, ChevronRight } from "lucide-react";
+
+export default function CartPage() {
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch cart
+  useEffect(() => {
+    async function fetchCart() {
+      try {
+        const res = await fetch("/api/cart");
+        const data = await res.json();
+        if (res.ok) setCartItems(data.items);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCart();
+  }, []);
+
+  // Remove item
+  const removeFromCart = async (id: number) => {
+    const confirm = await Swal.fire({
+      title: "Remove Item?",
+      text: "This item will be removed from your cart.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Remove",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setCartItems((prev) => prev.filter((i) => i.id !== id));
+      Swal.fire("Removed", "Item removed", "success");
+    }
+  };
+
+  if (loading) return <p className="mt-10 text-center text-gray-500">Loading cart...</p>;
+
+  // If empty
+  if (cartItems.length === 0)
+    return (
+      <div className="text-center mt-10">
+        <Image src="/empty-cart.png" alt="Empty Cart" width={200} height={200} />
+        <h2 className="mt-4 text-xl font-semibold text-gray-700">Your cart is empty</h2>
+        <Link href="/" className="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-md">
+          Shop Now
+        </Link>
+      </div>
+    );
+
+  // Price calc
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.offerPrice ?? item.price) * (item.quantity ?? 1),
+    0
+  );
+  const shipping = 0;
+  const total = subtotal;
+
+  const updateQuantity = async (id: number, qty: number) => {
+  if (qty < 1) return;
+
+  await fetch(`/api/cart/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ quantity: qty }),
+  });
+
+  // frontend update
+  setCartItems(prev =>
+    prev.map(item =>
+      item.id === id ? { ...item, quantity: qty } : item
+    )
+  );
+};
+
+
+  return (
+    <div className="bg-[#F1F3F6] min-h-screen pb-10">
+      {/* Header like Flipkart */}
+      <div className="bg-[#2874f0] h-16 flex items-center px-10 text-white text-xl font-semibold">
+        <Link href="/">ShopEase</Link>
+      </div>
+
+      {/* Cart layout */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {/* Left: Items */}
+        <div className="md:col-span-2 bg-white rounded shadow-sm">
+          <h2 className="border-b px-6 py-4 text-lg font-semibold">My Cart ({cartItems.length})</h2>
+
+          {cartItems.map((item) => (
+            <div key={item.id} className="flex border-b px-6 py-6 gap-6">
+              {/* Image */}
+              <div className="relative w-32 h-32">
+                <Image
+                  src={item.img?.startsWith("/upload") ? item.img : `/upload/${item.img}`}
+                  alt={item.title}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="flex-1">
+                <h3 className="text-lg font-medium text-gray-800">{item.title}</h3>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Size: {item.size || "M"} | Color: {item.color || "Default"}
+                </p>
+
+                {/* Price */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xl font-bold text-black">
+                    ₹{item.offerPrice ?? item.price}
+                  </span>
+                  {item.offerPrice && (
+                    <span className="text-gray-500 line-through">
+                      ₹{item.price}
+                    </span>
+                  )}
+                  <span className="text-green-600 font-semibold text-sm">
+                    {item.offerPrice ? "₹" + (item.price - item.offerPrice) + " Off" : ""}
+                  </span>
+                </div>
+
+                {/* Quantity + Remove */}
+                <div className="flex items-center gap-3">
+                  {/* Minus Button */}
+                  <button
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300
+               text-lg font-bold hover:bg-gray-100 active:scale-90 transition"
+                  >
+                    −
+                  </button>
+
+                  {/* Quantity Box */}
+                  <div className="w-12 h-8 flex items-center justify-center border border-gray-400 
+                  rounded-md text-sm font-semibold bg-white">
+                    {item.quantity}
+                  </div>
+
+                  {/* Plus Button */}
+                  <button
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300
+               text-lg font-bold hover:bg-gray-100 active:scale-90 transition"
+                  >
+                    +
+                  </button>
+                </div>
+
+
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-600 font-medium hover:underline"
+                >
+                  REMOVE
+                </button>
+              </div>
+            </div>
+            
+          ))}
+
+        {/* Place order button */}
+        <div className="p-4 border-t flex justify-end">
+          <button className="bg-orange-500 text-white px-10 py-3 rounded-md text-lg font-semibold"
+          onClick={() => Swal.fire("Proceeding to Payment", "Redirecting...", "info")}>
+            PLACE ORDER
+          </button>
+        </div>
+      </div>
+
+      {/* Right: Price Summary */}
+      <div className="bg-white h-fit rounded shadow-sm">
+        <h3 className="border-b px-6 py-4 text-lg font-semibold text-gray-600">
+          PRICE DETAILS
+        </h3>
+
+        <div className="px-6 py-4 space-y-3 text-sm">
+          <div className="flex justify-between">
+            <span>Price ({cartItems.length} items)</span>
+            <span>₹{subtotal}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Delivery Charges</span>
+            <span className="text-green-600 font-semibold">FREE</span>
+          </div>
+
+          <div className="border-t pt-3 flex justify-between text-lg font-semibold">
+            <span>Total Amount</span>
+            <span>₹{total}</span>
+          </div>
+
+          <p className="text-green-700 text-sm pt-2">
+            You will save extra on this order 🎉
+          </p>
+        </div>
+      </div>
+    </div>
+    </div >
+  );
+}
