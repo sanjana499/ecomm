@@ -45,7 +45,7 @@ export default function OrderDetailsPage({
             <p>Status: {order.status}</p>
             <p>Total: ₹{order.total_amount
             }</p>
-          </div>
+          </div>  
 
           <div className="border p-4 rounded bg-white shadow-sm">
             <h3 className="font-semibold mb-2">Items</h3>
