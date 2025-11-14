@@ -16,3 +16,11 @@ export const db = drizzle(connection, {
   schema,
   mode: "default", // ✅ required for standard MySQL (not PlanetScale)
 });
+
+
+export async function getUserIdFromReq(req: Request | any) {
+  // Example: read a header for dev/testing
+  // In real app read cookie/session/JWT
+  const userId = req.headers.get("x-user-id");
+  return userId ? Number(userId) : null;
+}

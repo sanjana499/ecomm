@@ -87,14 +87,18 @@ export const addresses = mysqlTable("addresses", {
   pincode: varchar("pincode", { length: 10 }),
 });
 
-export const orders1 = mysqlTable("orders", {
+export const orders = mysqlTable("orders", {
   id: serial("id").primaryKey(),
-  userId: int("user_id"),
-  addressId: int("address_id"),
-  total: int("total"),
-  status: varchar("status", { length: 20 }).default("pending"),
+  user_id: int("user_id"),
+  status: varchar("status", { length: 50 }),
+  total_amount: decimal("total_amount", { precision: 10, scale: 2 }),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
-function mysqlEnum(arg0: string, arg1: string[]) {
-  throw new Error("Function not implemented.");
-}
+export const order_items = mysqlTable("order_items", {
+  id: serial("id").primaryKey(),
+  order_id: int("order_id").notNull(),
+  product_id: int("product_id").notNull(),
+  price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+  quantity: int("quantity").notNull(),
+});

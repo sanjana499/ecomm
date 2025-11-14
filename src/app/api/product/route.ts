@@ -11,7 +11,6 @@ const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
 
 // 🟢 CREATE PRODUCT
-// 🟢 CREATE PRODUCT
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
       imagePath = `/uploads/${filename}`;
     }
 
-    // 🧾 Extract form fields
+   
     // 🧾 Extract form fields
     const title = formData.get("title") as string;
     const category_id = Number(formData.get("category_id"));

@@ -156,7 +156,7 @@ export default function SubCategoryPage() {
           {/* ✅ Sub Category Table */}
           <div className="bg-white rounded-lg shadow-md overflow-x-auto">
             <table className="min-w-full text-sm text-left border-collapse">
-              <thead className="bg-gray-100 border-b">
+              <thead className="bg-gray-100 border-b border-gray-500">
                 <tr>
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">Name</th>
@@ -169,15 +169,18 @@ export default function SubCategoryPage() {
               <tbody>
                 {subCategories.length > 0 ? (
                   subCategories.map((s, i) => (
-                    <tr key={s.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{i + 1}</td>
-                      <td className="px-4 py-2 font-medium">{s.name}</td>
-                      <td className="px-4 py-2">
+                    <tr key={s.id} className="border-b border-gray-300 hover:bg-gray-50">
+                      <td className="px-4 py-3">{i + 1}</td>
+                      <td className="px-4 py-3 font-medium text-blue-600 ">{s.name}</td>
+                      <td className="px-4 py-3">
                         {categories.find((c) => c.id === s.categories_id)?.name ||
                           "-"}
                       </td>
-                      <td className="px-4 py-2 text-gray-600">
-                        {s.description}
+                      <td
+                        className="px-4 py-3 text-gray-600 max-w-[100px] truncate"
+                        title={s.description}
+                      >
+                        {s.description || "-"}
                       </td>
                       <td className="px-4 py-2">
                         <span
@@ -190,7 +193,7 @@ export default function SubCategoryPage() {
                           {s.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-right flex gap-2 justify-end">
+                      <td className="px-4 py-3 text-right flex gap-2 justify-end">
                         <button
                           onClick={() => openModal(s)}
                           className="text-blue-600 hover:text-blue-800 transition"

@@ -49,8 +49,8 @@ export default function CategoryPage() {
         method: "POST",
         body: fd,
       });
-      const slug = formData.name.toLowerCase().replace(/[' ]+/g, "-");
-      fd.append("slug", slug);
+      // const slug = formData.name.toLowerCase().replace(/[' ]+/g, "-");
+      // fd.append("slug", slug);
 
       const data = await res.json();
       console.log("data", data);
@@ -113,27 +113,27 @@ export default function CategoryPage() {
 
           {/* ✅ Category Table */}
           <div className="bg-white rounded-lg shadow-md overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-100">
+            <table className="min-w-full text-sm  text-left border-collapse">
+              <thead className="bg-gray-100 border-b border-gray-500">
                 <tr>
-                  <th className="px-4 py-2 text-left">#</th>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">#</th>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Status</th>
                   {/* <th className="px-4 py-2 text-left">Image</th> */}
-                  <th className="px-4 py-2 text-left">Description</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
+                  <th className="px-4 py-3 text-left">Description</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.isArray(categories) && categories.length > 0 ? (
                   categories.map((c, i) => (
-                    <tr key={c.id || i} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{i + 1}</td>
-                      <td className="px-4 py-2 font-medium text-blue-600 hover:underline cursor-pointer"
-                        onClick={() => router.push(`/category/${c.slug}`)}>
+                    <tr key={c.id || i} className="border-b border-gray-300 hover:bg-gray-50">
+                      <td className="px-4 py-3">{i + 1}</td>
+                      <td className="px-4 py-3 font-medium text-blue-600 "
+                     >
                         {c.name}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-3">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${c.status === true || c.status === "active"
                             ? "bg-green-100 text-green-700"
@@ -156,12 +156,14 @@ export default function CategoryPage() {
                           "-"
                         )}
                       </td> */}
-                      <td className="px-4 py-2 text-gray-600">
+                      <td
+                        className="px-4 py-3 text-gray-600 max-w-[100px] truncate"
+                        title={c.description}
+                      >
                         {c.description || "-"}
                       </td>
 
                       <td className="flex">
-
                         <button
                           onClick={() => router.push(`/master/categories/edit/${c.id}`)}
                           className="p-2 rounded-full hover:bg-blue-100 transition"
