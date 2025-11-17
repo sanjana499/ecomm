@@ -111,3 +111,4 @@ export const order_items = mysqlTable("order_items", {
   quantity: int("quantity").notNull(),
 });
 
+
