@@ -63,22 +63,55 @@ export default function CartPage() {
     }
   };
 
+// const fetchCart = async () => {
+//   try {
+//     const res = await fetch("/api/session-cart");
+//     const data = await res.json();
+//     setCartItems(data.cart || []);
+//     setSavedItems(data.savedItems || []);
+//   } catch (err) {
+//     Swal.fire("Error", "Failed to load cart items", "error");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
 
 
-  const updateQuantity = async (cartId: number, newQty: number) => {
+
+
+
+  // const updateQuantity = async (cartId: number, newQty: number) => {
+  //   if (newQty < 1) return;
+
+  //   await fetch(`/api/cart/update/${cartId}`, {
+  //     method: "PUT",
+  //     body: JSON.stringify({ quantity: newQty }),
+  //   });
+
+  //   fetchCart();        // update cart items
+  //   //fetchCartCount();   // update cart icon count
+
+  //   //fetchCart(); // now works 👍
+  // };
+
+  const updateQuantity = async (productId: number, newQty: number) => {
     if (newQty < 1) return;
 
-    await fetch(`/api/cart/update/${cartId}`, {
+    await fetch(`/api/cart/update/${productId}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quantity: newQty }),
     });
 
-    fetchCart();        // update cart items
-    //fetchCartCount();   // update cart icon count
-
-    //fetchCart(); // now works 👍
+    fetchCart();
   };
+
 
 
 
@@ -93,50 +126,56 @@ export default function CartPage() {
   }, []);
 
   // 🧩 Fetch Cart Items
-  useEffect(() => {
-    async function fetchCart() {
-      try {
-        const res = await fetch("/api/cart");
-        const data = await res.json();
-        if (res.ok) setCartItems(data.items);
-      } catch (error) {
-        Swal.fire("Error", "Failed to load cart items", "error");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCart();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchCart() {
+  //     try {
+  //       const res = await fetch("/api/session-cart");
+  //       const data = await res.json();
+  //       if (res.ok) setCartItems(data.items);
+  //     } catch (error) {
+  //       Swal.fire("Error", "Failed to load cart items", "error");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  //   fetchCart();
+  // }, []);
 
   // 🗑️ Remove Item from Cart
-  const removeFromCart = async (id: number) => {
-    const confirm = await Swal.fire({
-      title: "Remove Item?",
-      text: "Are you sure you want to remove this item from your cart?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, remove it",
-      cancelButtonText: "Cancel",
-    });
+  // const removeFromCart = async (id: number) => {
+  //   const confirm = await Swal.fire({
+  //     title: "Remove Item?",
+  //     text: "Are you sure you want to remove this item from your cart?",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonText: "Yes, remove it",
+  //     cancelButtonText: "Cancel",
+  //   });
 
-    if (!confirm.isConfirmed) return;
+  //   if (!confirm.isConfirmed) return;
 
-    try {
-      const res = await fetch(`/api/cart/${id}`, {
-        method: "DELETE",
-      });
+  //   try {
+  //     const res = await fetch(`/api/cart/${id}`, {
+  //       method: "DELETE",
+  //     });
 
-      if (res.ok) {
-        setCartItems((prev) => prev.filter((item) => item.id !== id));
-        //await fetchCartCount(); // ✅ Update cart icon count immediately
-        Swal.fire("Removed!", "Item removed from cart.", "success");
-      } else {
-        Swal.fire("Error", "Failed to remove item", "error");
-      }
-    } catch (error) {
-      Swal.fire("Error", "Something went wrong", "error");
-    }
+  //     if (res.ok) {
+  //       setCartItems((prev) => prev.filter((item) => item.id !== id));
+  //       //await fetchCartCount(); // ✅ Update cart icon count immediately
+  //       Swal.fire("Removed!", "Item removed from cart.", "success");
+  //     } else {
+  //       Swal.fire("Error", "Failed to remove item", "error");
+  //     }
+  //   } catch (error) {
+  //     Swal.fire("Error", "Something went wrong", "error");
+  //   }
+  // };
+
+  const removeFromCart = async (productId: number) => {
+    await fetch(`/api/remove/${productId}`, { method: "DELETE" });
+    fetchCart();
   };
+
 
   if (loading) return <p className="text-center mt-10 text-gray-500">Loading cart...</p>;
   if (cartItems.length === 0)
@@ -159,50 +198,63 @@ export default function CartPage() {
   localStorage.setItem("cartTotal", total.toFixed(2));
 
   //Save Later Button//
-const handleSaveForLater = async (item: any) => {
-  try {
-    // Remove from cart
-    setCartItems(prev => prev.filter(i => i.id !== item.id));
+  // const handleSaveForLater = async (item: any) => {
+  //   try {
+  //     // Remove from cart
+  //     setCartItems(prev => prev.filter(i => i.id !== item.id));
 
-    // Add to savedItems state
-    setSavedItems(prev => {
-      const updated = [...prev, item];
-      localStorage.setItem("savedItems", JSON.stringify(updated));
-      return updated;
-    });
+  //     // Add to savedItems state
+  //     setSavedItems(prev => {
+  //       const updated = [...prev, item];
+  //       localStorage.setItem("savedItems", JSON.stringify(updated));
+  //       return updated;
+  //     });
 
-    // Optional server removal
-    await fetch(`/api/cart/${item.id}`, { method: "DELETE" });
+  //     // Optional server removal
+  //     await fetch(`/api/cart/${item.id}`, { method: "DELETE" });
 
-    Swal.fire("Saved!", "Item moved to Save for Later.", "success");
-  } catch (err) {
-    console.error(err);
-    Swal.fire("Error", "Failed to save item", "error");
-  }
-};
+  //     Swal.fire("Saved!", "Item moved to Save for Later.", "success");
+  //   } catch (err) {
+  //     console.error(err);
+  //     Swal.fire("Error", "Failed to save item", "error");
+  //   }
+  // };
+
+  const handleSaveForLater = async (item: any) => {
+    await fetch(`/api/cart/save/${item.id}`, { method: "POST" });
+    fetchCart();
+  };
+
+
   //Move To Cart//
-// ✅ Move Item back to Cart
-const handleMoveToCart = async (item: any) => {
-  try {
-    // Remove from savedItems state
-    setSavedItems(prev => {
-      const updated = prev.filter(i => i.id !== item.id);
-      localStorage.setItem("savedItems", JSON.stringify(updated));
-      return updated;
-    });
+  // ✅ Move Item back to Cart
+  // const handleMoveToCart = async (item: any) => {
+  //   try {
+  //     // Remove from savedItems state
+  //     setSavedItems(prev => {
+  //       const updated = prev.filter(i => i.id !== item.id);
+  //       localStorage.setItem("savedItems", JSON.stringify(updated));
+  //       return updated;
+  //     });
 
-    // Add back to cartItems
-    setCartItems(prev => [...prev, item]);
+  //     // Add back to cartItems
+  //     setCartItems(prev => [...prev, item]);
 
-    // Optional server add
-    // await fetch("/api/cart/add", { method: "POST", body: JSON.stringify(item) });
+  //     // Optional server add
+  //     // await fetch("/api/cart/add", { method: "POST", body: JSON.stringify(item) });
 
-    Swal.fire("Moved!", "Item moved back to Cart.", "success");
-  } catch (err) {
-    console.error(err);
-    Swal.fire("Error", "Failed to move item to cart", "error");
-  }
-};
+  //     Swal.fire("Moved!", "Item moved back to Cart.", "success");
+  //   } catch (err) {
+  //     console.error(err);
+  //     Swal.fire("Error", "Failed to move item to cart", "error");
+  //   }
+  // };
+
+  const handleMoveToCart = async (item: any) => {
+    await fetch(`/api/cart/move/${item.id}`, { method: "POST" });
+    fetchCart();
+  };
+
 
 
   return (
@@ -416,7 +468,7 @@ const handleMoveToCart = async (item: any) => {
 
                   {/* ✅ Save for Later Button */}
                   <button
-                     onClick={() => handleSaveForLater(item)}
+                    onClick={() => handleSaveForLater(item)}
                     className="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 transition text-sm"
                   >
                     Save for Later
@@ -431,7 +483,7 @@ const handleMoveToCart = async (item: any) => {
                         <div key={item.id} className="flex justify-between items-center p-2 border mb-2 rounded">
                           <span>{item.title}</span>
                           <button
-                             onClick={() => handleMoveToCart(item)}
+                            onClick={() => handleMoveToCart(item)}
                             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                           >
                             Move to Cart

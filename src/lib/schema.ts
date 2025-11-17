@@ -102,3 +102,11 @@ export const order_items = mysqlTable("order_items", {
   price: decimal("price", { precision: 12, scale: 2 }).notNull(),
   quantity: int("quantity").notNull(),
 });
+
+// ✅ Saved Items Table of Carts
+export const saved_items = mysqlTable("saved_items", {
+  id: serial("id").primaryKey(),
+  userId: int("user_id").notNull(),       // user who saved the item
+  productId: int("product_id").notNull(), // product id
+  created_at: timestamp("created_at").defaultNow(),
+});
