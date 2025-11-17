@@ -18,7 +18,11 @@ export const users = mysqlTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  country: varchar("country", { length: 255 }).notNull(),
+  state: varchar("state", { length: 255 }).notNull(),
+  city: varchar("city", { length: 255 }).notNull(),
+  customerId: varchar("customer_id", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 // ✅ Products Table
@@ -89,11 +93,15 @@ export const addresses = mysqlTable("addresses", {
 
 export const orders = mysqlTable("orders", {
   id: serial("id").primaryKey(),
-  user_id: int("user_id"),
-  status: varchar("status", { length: 50 }),
-  total_amount: decimal("total_amount", { precision: 10, scale: 2 }),
+  user_id: int("user_id").notNull(),
+  total_amount: decimal("total_amount", { precision: 10, scale: 0 }).notNull(),
+  payment_method: varchar("payment_method", { length: 50 }).notNull().default("online"),
+  status: varchar("status", { length: 20 }).default("pending"),
+  address_id: int("address_id").notNull(),
+  items: text("items").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 });
+
 
 export const order_items = mysqlTable("order_items", {
   id: serial("id").primaryKey(),
@@ -102,3 +110,4 @@ export const order_items = mysqlTable("order_items", {
   price: decimal("price", { precision: 12, scale: 2 }).notNull(),
   quantity: int("quantity").notNull(),
 });
+

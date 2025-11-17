@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     qualities: [75, 100],
+    domains: ["myserver.com", "flagsapi.com"],
   },
 };
 

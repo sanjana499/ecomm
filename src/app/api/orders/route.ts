@@ -1,68 +1,40 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, order_items, products, users } from "@/lib/schema";
-import { desc, eq, inArray } from "drizzle-orm";
+import { orders } from "@/lib/schema";
+import { desc } from "drizzle-orm";   // ✅ REQUIRED IMPORT
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { user_id, total_amount, items, address_id } = body;
+
+    const inserted = await db
+      .insert(orders)
+      .values({
+        user_id,
+        total_amount,
+        status: "pending",
+        payment_method: "cod",       // COD SAVE
+        items: JSON.stringify(items), // MUST BE TEXT
+        address_id,
+      });
+
+    return Response.json({ success: true, message: "COD Order Placed" });
+  } catch (error) {
+    console.log(error);
+    return Response.json({ error: "Order failed" }, { status: 500 });
+  }
+}
 
 export async function GET() {
-  const allOrders = await db
-    .select({
-      id: orders.id,
-      user_id: orders.user_id,
-      total_amount: orders.total_amount,
-      status: orders.status,
-      created_at: orders.created_at,
-    })
-    .from(orders)
-    .orderBy(desc(orders.created_at));
+  try {
+    const result = await db
+      .select()
+      .from(orders)
+      .orderBy(desc(orders.created_at)); // FIXED
 
-  const result = await Promise.all(
-    allOrders.map(async (o) => {
-      // Fetch items
-      const items = await db
-        .select({
-          id: order_items.id,
-          product_id: order_items.product_id,
-          price: order_items.price,
-          quantity: order_items.quantity,
-        })
-        .from(order_items)
-        .where(eq(order_items.order_id, o.id));
-
-      const productIds = items.map((it) => it.product_id);
-
-      const prods = productIds.length
-        ? await db.select().from(products).where(inArray(products.id, productIds))
-        : [];
-
-      const itemsWithProduct = items.map((it) => ({
-        ...it,
-        product: prods.find((p) => p.id === it.product_id) || null,
-      }));
-
-      // Fetch user safely
-      let userData = null;
-
-      if (o.user_id !== null) {
-        const u = await db
-          .select({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-          })
-          .from(users)
-          .where(eq(users.id, o.user_id!))
-          .limit(1);
-
-        userData = u[0] || null;
-      }
-
-      return {
-        ...o,
-        items: itemsWithProduct,
-        user: userData,
-      };
-    })
-  );
-
-  return NextResponse.json(result);
+    return Response.json(result);
+  } catch (error) {
+    console.log(error);
+    return Response.json({ error: "Failed to fetch orders" });
+  }
 }

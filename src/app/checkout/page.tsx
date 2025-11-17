@@ -16,6 +16,7 @@ export default function CheckoutPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [cartItems, setCartItems] = useState([]);
 
 
   const [subtotal, setSubtotal] = useState(0);
@@ -84,25 +85,30 @@ export default function CheckoutPage() {
       Swal.fire("Select Address", "Please choose a delivery address", "warning");
       return;
     }
-
-    // 2️⃣ Validate payment selection
+  
+    // 2️⃣ Validate payment method
     if (!selectedPayment) {
       Swal.fire("Select Payment", "Please select a payment method", "warning");
       return;
     }
-
-    // 3️⃣ Validate payment details
+  
+    // 3️⃣ Payment Details (if needed)
     let paymentDetails: any = {};
+  
     if (selectedPayment === "upi") {
       const upiInput = (document.querySelector<HTMLInputElement>(
         'input[placeholder="Enter UPI ID"]'
       ))?.value;
+  
       if (!upiInput) {
         Swal.fire("Enter UPI ID", "Please enter your UPI ID", "warning");
         return;
       }
+  
       paymentDetails = { upiId: upiInput };
-    } else if (selectedPayment === "card") {
+    }
+  
+    if (selectedPayment === "card") {
       const cardNumber = (document.querySelector<HTMLInputElement>(
         'input[placeholder="Card Number"]'
       ))?.value;
@@ -112,58 +118,69 @@ export default function CheckoutPage() {
       const cvv = (document.querySelector<HTMLInputElement>(
         'input[placeholder="CVV"]'
       ))?.value;
-
+  
       if (!cardNumber || !expiry || !cvv) {
         Swal.fire("Enter Card Details", "Please fill all card fields", "warning");
         return;
       }
-
+  
       paymentDetails = { cardNumber, expiry, cvv };
-    } else if (selectedPayment === "wallet") {
+    }
+  
+    if (selectedPayment === "wallet") {
       const wallet = (document.querySelector<HTMLInputElement>(
         'input[placeholder="Wallet / Promo Code"]'
       ))?.value;
+  
       if (!wallet) {
         Swal.fire("Enter Wallet / Promo Code", "Please enter wallet or promo code", "warning");
         return;
       }
+  
       paymentDetails = { wallet };
-    } else if (selectedPayment === "cod") {
-      paymentDetails = { note: "Cash on Delivery" };
     }
-
-    // 4️⃣ Send order request
-    try {
-      const res = await fetch("/api/orders/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: 1,
-          addressId: selectedAddress,
-          total,
-          paymentMethod: selectedPayment,
-          paymentDetails,
-        }),
-        credentials: "include", // ✅ cookie-based auth
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        Swal.fire("Error", text || "Failed to place order", "error");
-        return;
+  
+    // 4️⃣ COD Order
+    if (selectedPayment === "cod") {
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: localStorage.getItem("userId"),
+            total_amount: total,
+            items: cartItems,
+            address_id: selectedAddress,
+            payment_method: "cod",
+          }),
+        });
+  
+        const data = await res.json();
+  
+        if (data.success) {
+          Swal.fire("Order Placed!", "Your COD order has been placed.", "success");
+        } else {
+          Swal.fire("Error", data.error || "Failed to place order", "error");
+        }
+      } catch (e) {
+        Swal.fire("Error", "Something went wrong", "error");
       }
-
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("Order Placed!", "Your order has been successfully placed.", "success");
-      } else {
-        Swal.fire("Error", data.error || "Failed to place order", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      Swal.fire("Error", "Something went wrong", "error");
+  
+      return;
     }
+  
+    // 5️⃣ Online Payment (future)
+    Swal.fire("Online Checkout", "Online payment is not implemented yet!", "info");
   };
+  
+  
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("cartItems") || "[]");
+    setCartItems(items);
+  }, []);
+  
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -336,76 +353,91 @@ export default function CheckoutPage() {
             {/* Payment Section - show only if address is selected */}
             {selectedAddress && (
               <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">Payment Options</h3>
-                <div className="flex flex-col gap-3">
-                  {[
-                    { id: "upi", label: "UPI", icon: "💸" },
-                    { id: "card", label: "Credit / Debit Card", icon: "💳" },
-                    { id: "cod", label: "Cash on Delivery", icon: "📦" },
-                    { id: "wallet", label: "Wallet / Other", icon: "👛" },
-                  ].map((option) => (
-                    <div
-                      key={option.id}
-                      className="flex flex-col border rounded-lg p-4 cursor-pointer hover:shadow-sm transition"
-                      onClick={() => setSelectedPayment(option.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={selectedPayment === option.id}
-                          readOnly
-                          className="w-4 h-4"
-                        />
-                        <span className="text-xl">{option.icon}</span>
-                        <span className="font-medium text-gray-700">{option.label}</span>
-                      </div>
-
-                      {/* Show input fields for selected payment */}
-                      {selectedPayment === option.id && (
-                        <div className="mt-3 ml-7 flex flex-col gap-2">
-                          {option.id === "upi" && (
-                            <input
-                              type="text"
-                              placeholder="Enter UPI ID"
-                              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          )}
-                          {option.id === "card" && (
-                            <>
-                              <input
-                                type="text"
-                                placeholder="Card Number"
-                                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <input
-                                type="text"
-                                placeholder="Expiry MM/YY"
-                                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <input
-                                type="text"
-                                placeholder="CVV"
-                                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                            </>
-                          )}
-                          {option.id === "wallet" && (
-                            <input
-                              type="text"
-                              placeholder="Wallet / Promo Code"
-                              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          )}
-                          {option.id === "cod" && (
-                            <p className="text-gray-500 text-sm">You will pay on delivery.</p>
-                          )}
-                        </div>
-                      )}
+              <h3 className="text-lg font-semibold mb-3">Payment Options</h3>
+            
+              <div className="flex flex-col gap-3">
+                {[
+                  { id: "upi", label: "UPI", icon: "💸" },
+                  { id: "card", label: "Credit / Debit Card", icon: "💳" },
+                  { id: "wallet", label: "Wallet / Other", icon: "👛" },
+                  { id: "cod", label: "Cash On Delivery", icon: "🚚" },   // ✅ COD ADDED HERE
+                ].map((option) => (
+                  <div
+                    key={option.id}
+                    className="flex flex-col border rounded-lg p-4 cursor-pointer hover:shadow-sm transition"
+                    onClick={() => setSelectedPayment(option.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={selectedPayment === option.id}
+                        readOnly
+                        className="w-4 h-4"
+                      />
+                      <span className="text-xl">{option.icon}</span>
+                      <span className="font-medium text-gray-700">{option.label}</span>
                     </div>
-                  ))}
-                </div>
+            
+                    {/* Show input fields for selected payment */}
+                    {selectedPayment === option.id && (
+                      <div className="mt-3 ml-7 flex flex-col gap-2">
+                        {option.id === "upi" && (
+                          <input
+                            type="text"
+                            placeholder="Enter UPI ID"
+                            className="border border-gray-300 rounded px-3 py-2"
+                          />
+                        )}
+            
+                        {option.id === "card" && (
+                          <>
+                            <input
+                              type="text"
+                              placeholder="Card Number"
+                              className="border border-gray-300 rounded px-3 py-2"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Expiry MM/YY"
+                              className="border border-gray-300 rounded px-3 py-2"
+                            />
+                            <input
+                              type="text"
+                              placeholder="CVV"
+                              className="border border-gray-300 rounded px-3 py-2"
+                            />
+                          </>
+                        )}
+            
+                        {option.id === "wallet" && (
+                          <input
+                            type="text"
+                            placeholder="Wallet / Promo Code"
+                            className="border border-gray-300 rounded px-3 py-2"
+                          />
+                        )}
+            
+                        {option.id === "cod" && (
+                          <p className="text-gray-500 text-sm">
+                            Pay with Cash when your order is delivered.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
+            
+              {/* ORDER BUTTON */}
+              <button
+                className="bg-black text-white w-full mt-4 py-3 rounded"
+                onClick={selectedPayment === "cod" ? placeOrder : placeOrder}
+              >
+                PLACE ORDER
+              </button>
+            </div>
+            
             )}
           </div>
 

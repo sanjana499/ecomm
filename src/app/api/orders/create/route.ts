@@ -62,11 +62,15 @@ export async function POST(req: Request) {
   const inserted = await db
   .insert(orders)
   .values({
-    user_id: userId,                        // FIXED ✔
-    total_amount: total.toString(),        // FIXED ✔ convert number → string
+    user_id: userId,
+    total_amount: total.toString(),
     status: "pending",
+    address_id: body.address_id ?? 0,       // ADD THIS
+    items: JSON.stringify(itemsWithPrice),  // ADD THIS
+    payment_method: body.payment_method ?? "COD",
   })
   .$returningId();
+
 
 
   const orderId = inserted[0]?.id;
