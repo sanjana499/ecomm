@@ -17,7 +17,9 @@ export default function CheckoutPage() {
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [cartItems, setCartItems] = useState([]);
-
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editAddress, setEditAddress] = useState<any>(null);
 
   const [subtotal, setSubtotal] = useState(0);
   const [shipping, setShipping] = useState(0);
@@ -30,6 +32,11 @@ export default function CheckoutPage() {
     setPlatformFee(parseFloat(localStorage.getItem("cartPlatformFee") || "5"));
     setTotal(parseFloat(localStorage.getItem("cartTotal") || "0"));
   }, []);
+
+  const openEditModal = (addr: any) => {
+    setEditAddress(addr);
+    setShowEditModal(true);
+  };
 
   // Load cart count
   useEffect(() => {
@@ -181,6 +188,60 @@ export default function CheckoutPage() {
     setCartItems(items);
   }, []);
   
+  const addAddress = async () => {
+    const payload = {
+      userId: localStorage.getItem("userId"),
+      name: (document.getElementById("add-name") as any).value,
+      phone: (document.getElementById("add-phone") as any).value,
+      address: (document.getElementById("add-address") as any).value,
+      city: (document.getElementById("add-city") as any).value,
+      state: (document.getElementById("add-state") as any).value,
+      pincode: (document.getElementById("add-pincode") as any).value,
+    };
+  
+    await fetch("/api/address", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  
+    setShowAddModal(false);
+    fetchAddresses();  // ✅ REFRESH LIST
+  };
+  
+
+  const updateAddress = async () => {
+    const payload = {
+      id: editAddress.id,
+      name: (document.getElementById("edit-name") as any).value,
+      phone: (document.getElementById("edit-phone") as any).value,
+      address: (document.getElementById("edit-address") as any).value,
+      city: (document.getElementById("edit-city") as any).value,
+      state: (document.getElementById("edit-state") as any).value,
+      pincode: (document.getElementById("edit-pincode") as any).value,
+    };
+  
+    await fetch("/api/address", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  
+    setShowEditModal(false);
+    fetchAddresses();
+  };
+
+  const fetchAddresses = async () => {
+    try {
+      const res = await fetch("/api/address");
+      const data = await res.json();
+      setAddresses(data);
+    } catch (err) {
+      console.error("Failed to load addresses:", err);
+    }
+  };
+  
+  
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -324,31 +385,45 @@ export default function CheckoutPage() {
         <div className="w-full max-w-5xl flex flex-col md:flex-row gap-4">
           {/* Left Section: Address */}
           <div className="flex-1 bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Delivery Address</h2>
-            {addresses.map((addr) => (
-              <div
-                key={addr.id}
-                className={`border p-4 rounded-md mb-3 ${selectedAddress === addr.id
-                  ? "border-blue-500"
-                  : "border-gray-300"
-                  }`}
-              >
-                <p className="font-medium">
-                  {addr.name} {addr.phone}
-                </p>
-                <p>{addr.address}</p>
-                <p>
-                  {addr.city}, {addr.state} - {addr.pincode}
-                </p>
+          <h2 className="text-lg font-semibold mb-4 flex justify-between">
+  Delivery Address
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
+  >
+    + Add New
+  </button>
+</h2>
 
-                <button
-                  onClick={() => setSelectedAddress(addr.id)}
-                  className="mt-3 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition"
-                >
-                  Deliver Here
-                </button>
-              </div>
-            ))}
+{addresses.map((addr) => (
+  <div
+    key={addr.id}
+    className={`border p-4 rounded-md mb-3 ${
+      selectedAddress === addr.id ? "border-blue-500" : "border-gray-300"
+    }`}
+  >
+    <p className="font-medium">{addr.name} {addr.phone}</p>
+    <p>{addr.address}</p>
+    <p>{addr.city}, {addr.state} - {addr.pincode}</p>
+
+    <div className="flex gap-3 mt-3">
+      <button
+        onClick={() => setSelectedAddress(addr.id)}
+        className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+      >
+        Deliver Here
+      </button>
+
+      <button
+        onClick={() => openEditModal(addr)}   // <-- EDIT MODAL OPEN
+        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+      >
+        Edit
+      </button>
+    </div>
+  </div>
+))}
+
 
             {/* Payment Section - show only if address is selected */}
             {selectedAddress && (
@@ -428,6 +503,52 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
+
+              {showAddModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white p-6 rounded-lg w-96">
+      <h3 className="text-lg font-semibold mb-4">Add New Address</h3>
+
+      <input type="text" placeholder="Name" className="input" id="add-name" />
+      <input type="text" placeholder="Phone" className="input" id="add-phone" />
+      <input type="text" placeholder="Address" className="input" id="add-address" />
+      <input type="text" placeholder="City" className="input" id="add-city" />
+      <input type="text" placeholder="State" className="input" id="add-state" />
+      <input type="text" placeholder="Pincode" className="input" id="add-pincode" />
+
+      <div className="flex justify-end gap-3 mt-4">
+        <button className="px-4 py-2 bg-gray-400 rounded" onClick={() => setShowAddModal(false)}>Cancel</button>
+        <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={addAddress}>
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showEditModal && editAddress && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white p-6 rounded-lg w-96">
+      <h3 className="text-lg font-semibold mb-4">Edit Address</h3>
+
+      <input defaultValue={editAddress.name} id="edit-name" className="input" />
+      <input defaultValue={editAddress.phone} id="edit-phone" className="input" />
+      <input defaultValue={editAddress.address} id="edit-address" className="input" />
+      <input defaultValue={editAddress.city} id="edit-city" className="input" />
+      <input defaultValue={editAddress.state} id="edit-state" className="input" />
+      <input defaultValue={editAddress.pincode} id="edit-pincode" className="input" />
+
+      <div className="flex justify-end gap-3 mt-4">
+        <button className="px-4 py-2 bg-gray-400 rounded" onClick={() => setShowEditModal(false)}>Cancel</button>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={updateAddress}>
+          Update
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
             
               {/* ORDER BUTTON */}
               <button

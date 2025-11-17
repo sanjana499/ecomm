@@ -15,10 +15,7 @@ export default function CartPage() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
-
   const router = useRouter();
-
-
   const [cartCount, setCartCount] = useState(0);
 
   const [savedItems, setSavedItems] = useState<any[]>(() => {
@@ -30,19 +27,19 @@ export default function CartPage() {
   });
 
 
-  // const fetchCartCount = async () => {
-  //   try {
-  //     const res = await fetch("/api/cart/count");
-  //     const data = await res.json();
-  //     setCartCount(data.count);
-  //   } catch (error) {
-  //     console.log("Error fetching cart count");
-  //   }
-  // };
+  const fetchCartCount = async () => {
+    try {
+      const res = await fetch("/api/cart/count");
+      const data = await res.json();
+      setCartCount(data.count);
+    } catch (error) {
+      console.log("Error fetching cart count");
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchCartCount();
-  // }, []);
+  useEffect(() => {
+    fetchCartCount();
+  }, []);
 
   // Update cart icon count whenever cartItems change
   useEffect(() => {
@@ -63,58 +60,44 @@ export default function CartPage() {
     }
   };
 
-// const fetchCart = async () => {
-//   try {
-//     const res = await fetch("/api/session-cart");
-//     const data = await res.json();
-//     setCartItems(data.cart || []);
-//     setSavedItems(data.savedItems || []);
-//   } catch (err) {
-//     Swal.fire("Error", "Failed to load cart items", "error");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
   useEffect(() => {
     fetchCart();
   }, []);
 
-
-
-
-
-
-  // const updateQuantity = async (cartId: number, newQty: number) => {
-  //   if (newQty < 1) return;
-
-  //   await fetch(`/api/cart/update/${cartId}`, {
-  //     method: "PUT",
-  //     body: JSON.stringify({ quantity: newQty }),
-  //   });
-
-  //   fetchCart();        // update cart items
-  //   //fetchCartCount();   // update cart icon count
-
-  //   //fetchCart(); // now works 👍
-  // };
-
-  const updateQuantity = async (productId: number, newQty: number) => {
+  const updateQuantity = async (id: any, newQty: number) => {
     if (newQty < 1) return;
 
-    await fetch(`/api/cart/update/${productId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity: newQty }),
-    });
+    try {
+      const res = await fetch("/api/cart/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, quantity: newQty }),
+      });
 
-    fetchCart();
+      const data = await res.json();
+
+      if (data.success) {
+        // ✅ Toast Message
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 1200,
+          timerProgressBar: true,
+        });
+
+        Toast.fire({
+          icon: "success",
+          title: `Quantity updated to ${newQty}`,
+        });
+
+        // Refresh cart UI (optional)
+        fetchCart();
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
-
-
-
-
 
   useEffect(() => {
     fetch("/api/categories")
@@ -125,55 +108,32 @@ export default function CartPage() {
       );
   }, []);
 
-  // 🧩 Fetch Cart Items
-  // useEffect(() => {
-  //   async function fetchCart() {
-  //     try {
-  //       const res = await fetch("/api/session-cart");
-  //       const data = await res.json();
-  //       if (res.ok) setCartItems(data.items);
-  //     } catch (error) {
-  //       Swal.fire("Error", "Failed to load cart items", "error");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   fetchCart();
-  // }, []);
 
-  // 🗑️ Remove Item from Cart
-  // const removeFromCart = async (id: number) => {
-  //   const confirm = await Swal.fire({
-  //     title: "Remove Item?",
-  //     text: "Are you sure you want to remove this item from your cart?",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonText: "Yes, remove it",
-  //     cancelButtonText: "Cancel",
-  //   });
+  const removeFromCart = async (id: number) => {
+    try {
+      const res = await fetch("/api/cart/remove", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }), // send id inside body
+      });
 
-  //   if (!confirm.isConfirmed) return;
+      const data = await res.json();
 
-  //   try {
-  //     const res = await fetch(`/api/cart/${id}`, {
-  //       method: "DELETE",
-  //     });
+      if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Item removed from cart",
+          timer: 1200,
+          showConfirmButton: false,
+        });
 
-  //     if (res.ok) {
-  //       setCartItems((prev) => prev.filter((item) => item.id !== id));
-  //       //await fetchCartCount(); // ✅ Update cart icon count immediately
-  //       Swal.fire("Removed!", "Item removed from cart.", "success");
-  //     } else {
-  //       Swal.fire("Error", "Failed to remove item", "error");
-  //     }
-  //   } catch (error) {
-  //     Swal.fire("Error", "Something went wrong", "error");
-  //   }
-  // };
-
-  const removeFromCart = async (productId: number) => {
-    await fetch(`/api/remove/${productId}`, { method: "DELETE" });
-    fetchCart();
+        fetchCart(); // refresh cart
+      } else {
+        Swal.fire("Error", "Failed to remove item", "error");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
 
@@ -197,64 +157,10 @@ export default function CartPage() {
   localStorage.setItem("cartPlatformFee", platformFee.toFixed(2));
   localStorage.setItem("cartTotal", total.toFixed(2));
 
-  //Save Later Button//
-  // const handleSaveForLater = async (item: any) => {
-  //   try {
-  //     // Remove from cart
-  //     setCartItems(prev => prev.filter(i => i.id !== item.id));
-
-  //     // Add to savedItems state
-  //     setSavedItems(prev => {
-  //       const updated = [...prev, item];
-  //       localStorage.setItem("savedItems", JSON.stringify(updated));
-  //       return updated;
-  //     });
-
-  //     // Optional server removal
-  //     await fetch(`/api/cart/${item.id}`, { method: "DELETE" });
-
-  //     Swal.fire("Saved!", "Item moved to Save for Later.", "success");
-  //   } catch (err) {
-  //     console.error(err);
-  //     Swal.fire("Error", "Failed to save item", "error");
-  //   }
-  // };
-
-  const handleSaveForLater = async (item: any) => {
-    await fetch(`/api/cart/save/${item.id}`, { method: "POST" });
-    fetchCart();
-  };
-
-
-  //Move To Cart//
-  // ✅ Move Item back to Cart
-  // const handleMoveToCart = async (item: any) => {
-  //   try {
-  //     // Remove from savedItems state
-  //     setSavedItems(prev => {
-  //       const updated = prev.filter(i => i.id !== item.id);
-  //       localStorage.setItem("savedItems", JSON.stringify(updated));
-  //       return updated;
-  //     });
-
-  //     // Add back to cartItems
-  //     setCartItems(prev => [...prev, item]);
-
-  //     // Optional server add
-  //     // await fetch("/api/cart/add", { method: "POST", body: JSON.stringify(item) });
-
-  //     Swal.fire("Moved!", "Item moved back to Cart.", "success");
-  //   } catch (err) {
-  //     console.error(err);
-  //     Swal.fire("Error", "Failed to move item to cart", "error");
-  //   }
-  // };
-
   const handleMoveToCart = async (item: any) => {
     await fetch(`/api/cart/move/${item.id}`, { method: "POST" });
     fetchCart();
   };
-
 
 
   return (
@@ -441,7 +347,6 @@ export default function CartPage() {
                 <div className="flex flex-col items-center gap-2">
 
                   <div className="flex items-center gap-2">
-                    {/* - Button */}
                     <button
                       onClick={() => updateQuantity(item.id, (item.quantity ?? 1) - 1)}
                       className="w-8 h-8 rounded-full border flex items-center justify-center text-lg font-bold"
@@ -449,14 +354,12 @@ export default function CartPage() {
                       -
                     </button>
 
-                    {/* Qty Display */}
                     <input
                       readOnly
                       value={item.quantity ?? 1}
                       className="w-10 text-center border rounded-md"
                     />
 
-                    {/* + Button */}
                     <button
                       onClick={() => updateQuantity(item.id, (item.quantity ?? 1) + 1)}
                       className="w-8 h-8 rounded-full border flex items-center justify-center text-lg font-bold"
@@ -466,13 +369,13 @@ export default function CartPage() {
                   </div>
 
 
-                  {/* ✅ Save for Later Button */}
+                  {/* ✅ Save for Later Button
                   <button
                     onClick={() => handleSaveForLater(item)}
                     className="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 transition text-sm"
                   >
                     Save for Later
-                  </button>
+                  </button> */}
 
 
                   {/* Saved Items Section */}
@@ -513,14 +416,27 @@ export default function CartPage() {
 
               <button
                 onClick={() => {
-                  // Save cart details to localStorage
-                  localStorage.setItem("cartItems", JSON.stringify(cartItems));
-                  localStorage.setItem("cartSubtotal", subtotal.toFixed(2));
-                  localStorage.setItem("cartShipping", shipping.toFixed(2));
-                  localStorage.setItem("cartPlatformFee", "5"); // platform fee
-                  localStorage.setItem("cartTotal", total.toFixed(2));
+                  const userId = localStorage.getItem("userId");
 
-                  // Navigate to checkout page
+                  if (!userId) {
+                    // 🛑 User not logged in → Show toast message
+                    Swal.fire({
+                      icon: "warning",
+                      title: "Please login first",
+                      text: "You must login before checkout!",
+                      timer: 1500,
+                      showConfirmButton: false,
+                    });
+
+                    // Redirect to login page after short delay
+                    setTimeout(() => {
+                      router.push("/login");
+                    }, 1200);
+
+                    return;
+                  }
+
+                  // 🟢 User is logged in → Allow checkout
                   router.push("/checkout");
                 }}
                 className="mt-6 w-50 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg transition font-semibold"

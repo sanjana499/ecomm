@@ -8,53 +8,29 @@ import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-reac
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 
-
 export default function ProductDetails() {
-  const { id } = useParams(); // ✅ Get product ID from URL
+  const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [addedQty, setAddedQty] = useState(0);
   const { cartCount, setCartCount } = useCart();
+  const [categories, setCategories] = useState<any[]>([]);
   const [openDropdown, setOpenDropdown] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [addedQty, setAddedQty] = useState(0);
 
+
+  // 🔹 Load Categories
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
-      .catch(() =>
-        Swal.fire("Error", "Failed to load categories", "error")
-      );
+      .catch(() => Swal.fire("Error", "Failed to load categories", "error"));
   }, []);
 
-
-  const addToCart = async () => {
-    try {
-      const res = await fetch("/api/cart/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, quantity: 1 }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setAddedQty(addedQty + 1);             // Button count
-        setCartCount(cartCount + 1);           // Global navbar count update
-
-        Swal.fire("Added to Cart", `${product.title} added to cart`, "success");
-      } else {
-        Swal.fire("Error", data.error || "Failed to add to cart", "error");
-      }
-    } catch {
-      Swal.fire("Error", "Unable to add to cart", "error");
-    }
-  };
-
-  // ✅ Fetch single product details
+  // 🔹 Load Product
   useEffect(() => {
     async function fetchProduct() {
       try {
@@ -63,100 +39,117 @@ export default function ProductDetails() {
         const data = await res.json();
         setProduct(data.product);
       } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "Unable to load product details", "error");
+        Swal.fire("Error", "Unable to load product", "error");
       } finally {
         setLoading(false);
       }
     }
-
     if (id) fetchProduct();
   }, [id]);
 
+  // 🔹 Add to Cart
+  const addToCart = async () => {
+    if (!selectedSize) return;
+
+    try {
+      const res = await fetch("/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1,
+          size: selectedSize,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setAddedQty(addedQty + 1);
+        setCartCount(cartCount + 1);
+        router.push("/cart");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+  const handleBuyNow = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login to continue.",
+      });
+
+      router.push("/login");
+      return;
+    }
+
+    // User logged in → Go to checkout
+    router.push("/checkout");
+  };
+
+
   if (loading)
-    return <p className="text-center text-gray-500 mt-10">Loading product details...</p>;
+    return <p className="text-center mt-10 text-gray-500">Loading product...</p>;
 
   if (!product)
-    return <p className="text-center text-gray-500 mt-10">Product not found.</p>;
+    return <p className="text-center mt-10 text-gray-500">Product not found.</p>;
 
   return (
     <div>
-      {/* 🔹 Top Navbar */}
-      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2">
-        <div className="flex items-center h-5">
-          <div className="relative w-[100px] h-[100px]">
-            {/* Optional logo */}
-          </div>
-          <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
-            ShopEase
-          </h1>
+      {/* 🔹 NAVBAR */}
+      <nav className="w-full flex items-center justify-between border-b pb-2">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold">ShopEase</h1>
         </div>
 
-        <div className="hidden md:flex items-center gap-6 relative">
-          {["Home", "Contact"].map((item) => (
-            <a
-              key={item}
-              href="/"
-              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-            >
-              {item}
-            </a>
-          ))}
+        <div className="hidden md:flex gap-6 relative">
+          <Link href="/">Home</Link>
+          <Link href="/">Contact</Link>
 
-          {/* Category Dropdown */}
+          {/* Categories Dropdown */}
           <div
-            className="relative z-50"
-            onMouseEnter={() => {
-              clearTimeout((window as any).dropdownTimer);
-              setOpenDropdown(true);
-            }}
+            className="relative"
+            onMouseEnter={() => setOpenDropdown(true)}
             onMouseLeave={() => {
-              (window as any).dropdownTimer = setTimeout(() => {
-                setOpenDropdown(false);
-                setActiveCategory(null);
-              }, 150);
+              setTimeout(() => setOpenDropdown(false), 150);
             }}
           >
-            <button
-              className="flex items-center text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-              onClick={() => setOpenDropdown(!openDropdown)}
-            >
-              Categories
-              <ChevronDown
-                className={`ml-1 h-4 w-4 transition-transform ${openDropdown ? "rotate-180" : ""
-                  }`}
-              />
+            <button className="flex items-center">
+              Categories <ChevronDown className="ml-1 h-4 w-4" />
             </button>
 
             {openDropdown && (
-              <div className="absolute left-0 mt-2 flex bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 z-50">
-                {/* Left - main categories */}
-                <div className="w-44 border-r dark:border-zinc-700">
+              <div className="absolute left-0 mt-2 flex bg-white shadow-lg rounded-lg border z-50">
+                {/* Left side */}
+                <div className="w-44 border-r">
                   {categories.map((cat) => (
                     <div
                       key={cat.id}
-                      className={`flex justify-between items-center px-4 py-2 text-sm cursor-pointer ${activeCategory === cat.name
-                        ? "bg-blue-100 dark:bg-zinc-700 text-blue-700"
-                        : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-zinc-700"
-                        }`}
+                      className={`px-4 py-2 text-sm cursor-pointer flex justify-between
+                      ${activeCategory === cat.name ? "bg-blue-100" : "hover:bg-blue-50"}`}
                       onMouseEnter={() => setActiveCategory(cat.name)}
                     >
-                      {cat.name}
-                      <ChevronRight className="h-4 w-4" />
+                      {cat.name} <ChevronRight className="h-4 w-4" />
                     </div>
                   ))}
                 </div>
 
-                {/* Right - subcategories */}
+                {/* Right side */}
                 {activeCategory && (
                   <div className="w-52">
                     {categories
-                      .find((cat) => cat.name === activeCategory)
+                      .find((c) => c.name === activeCategory)
                       ?.subcategories.map((sub: any) => (
                         <Link
                           key={sub.id}
-                          href={`/category/slippers/${sub.id}`} // ✅ correct dynamic route
-                          className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-700"
+                          href={`/category/slippers/${sub.id}`}
+                          className="block px-4 py-2 text-sm hover:bg-blue-100"
                           onClick={() => setOpenDropdown(false)}
                         >
                           {sub.name}
@@ -164,136 +157,101 @@ export default function ProductDetails() {
                       ))}
                   </div>
                 )}
-
               </div>
             )}
           </div>
 
-          <a
-            href="/login"
-            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-          >
-            Login
-          </a>
+          <Link href="/login">Login</Link>
         </div>
 
         <div className="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
-          />
-
           <button onClick={() => router.push("/cart")} className="relative">
             <ShoppingCart className="w-6 h-6" />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">
               {cartCount}
             </span>
           </button>
-          <button>
-            <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-          </button>
 
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          <User className="w-6 h-6" />
+
+          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <Menu className="w-6 h-6" />
           </button>
         </div>
       </nav>
-      {/* 🔹 Mobile Menu */}
-      {isMenuOpen && (
-        <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6">
-          {["Home", "Men's", "Women's", "Contact"].map((item) => (
-            <a
-              key={item}
-              href="/"
-              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
-      )}
 
-      {/* 🔹 Product Details */}
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Product Image */}
+      {/* 🔹 PRODUCT DETAILS */}
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow grid md:grid-cols-2 gap-6">
+          {/* Image */}
           <div className="relative w-full h-96">
             <Image
-              src={
-                product.img?.startsWith("/upload")
-                  ? product.img
-                  : `/upload/${product.img}`
-              }
-              alt={product.title || "Product Image"}
+              src={product.img?.startsWith("/upload") ? product.img : `/upload/${product.img}`}
+              alt={product.title}
               fill
-              className="object-contain rounded-md bg-gray-100"
+              className="object-contain"
             />
           </div>
 
-          {/* Product Info */}
+          {/* Info */}
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-              {product.title}
-            </h1>
-            <p className="text-gray-600 mb-4">
-              {product.description || "No description available."}
-            </p>
+            <h1 className="text-2xl font-semibold mb-2">{product.title}</h1>
 
-            <div className="flex items-center gap-3 mb-4">
+            <p className="text-gray-600 mb-4">{product.description}</p>
+
+            <div className="flex gap-3 items-center">
               <span className="text-green-600 text-2xl font-bold">
                 ₹{product.offerPrice ?? product.price}
               </span>
+
               {product.offerPrice && (
-                <span className="text-gray-400 line-through text-lg">
-                  ₹{product.price}
-                </span>
+                <span className="line-through text-gray-400 text-lg">₹{product.price}</span>
               )}
             </div>
 
-            {product.color && (
-              <p className="text-sm text-gray-700 mb-1">
-                <strong>Color:</strong> {product.color}
-              </p>
-            )}
-            {product.size && (
-              <p className="text-sm text-gray-700 mb-1">
-                <strong>Size:</strong> {product.size}
-              </p>
-            )}
-            {product.gender && (
-              <p className="text-sm text-gray-700 mb-1">
-                <strong>Gender:</strong> {product.gender}
-              </p>
-            )}
-            {product.type && (
-              <p className="text-sm text-gray-700 mb-1">
-                <strong>Type:</strong> {product.type}
-              </p>
-            )}
+            {/* SIZE SELECTOR (Fixed) */}
+            <div className="mt-4">
+              <label className="text-sm font-semibold">Select Size</label>
 
-            {/* 🔹 Buttons in a single row */}
-            <div className="mt-4 flex  gap-3">
+              <div className="flex gap-2 mt-2">
+                {["M", "L", "XL", "XXL", "XXXL"].map((sz) => (
+                  <button
+                    key={sz}
+                    onClick={() => setSelectedSize(sz)}
+                    className={`px-4 py-1 rounded-md border text-sm font-medium transition
+                      ${selectedSize === sz
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-200"
+                      }`}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="mt-5 flex gap-3">
               <button
                 onClick={addToCart}
-                className="w-32 bg-blue-600 text-white py-1.5 rounded-md hover:bg-blue-700"
+                disabled={!selectedSize}
+                className={`w-32 py-2 rounded-md ${!selectedSize
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
               >
-                🛒 Add to Cart {addedQty > 0 && `(${addedQty})`}
+                🛒 Add to Cart
               </button>
+
               <button
-                onClick={() => router.push("/checkout")}
-                className="w-28 bg-orange-500 text-white py-1.5 text-sm rounded-md hover:bg-orange-600 transition font-medium"
+                onClick={handleBuyNow}
+                className="w-28 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
               >
                 ⚡ Buy Now
               </button>
+
             </div>
-
-
           </div>
-
         </div>
       </div>
     </div>

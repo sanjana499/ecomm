@@ -4,21 +4,18 @@ import { cart } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
 // 🗑️ DELETE /api/cart/[id]
-export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request) {
   try {
-    // ✅ Unwrap params promise
-    const { id } = await context.params;
-    const cartId = Number(id);
+    const { id } = await req.json(); // 🟢 ID from body
 
-    if (isNaN(cartId)) {
-      return NextResponse.json({ error: "Invalid cart ID" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json(
+        { error: "Cart ID is required" },
+        { status: 400 }
+      );
     }
 
-    // ✅ Delete from DB
-    await db.delete(cart).where(eq(cart.id, cartId));
+    await db.delete(cart).where(eq(cart.id, Number(id)));
 
     return NextResponse.json({
       success: true,
@@ -28,6 +25,31 @@ export async function DELETE(
     console.error("Delete cart error:", error);
     return NextResponse.json(
       { error: "Failed to remove item" },
+      { status: 500 }
+    );
+  }
+}
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, quantity } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID missing" },
+        { status: 400 }
+      );
+    }
+
+    await db
+      .update(cart)
+      .set({ quantity })
+      .where(eq(cart.id, id));
+
+    return NextResponse.json({ success: true }); // ⭐ MUST RETURN JSON
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Server error" },
       { status: 500 }
     );
   }

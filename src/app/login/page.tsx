@@ -23,6 +23,7 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
+
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -33,22 +34,25 @@ export default function LoginPage() {
       setLoading(false);
 
       if (data.success) {
-        Swal.fire("Success", "Login successful!", "success");
-        localStorage.setItem("user", JSON.stringify(data.user));
-        router.push("/dashboard");
+        // ⭐ LOGIN SUCCESS — STORE SESSION ⭐
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.userId);
+        localStorage.setItem("userName", data.name);
+
+        Swal.fire("Success", "Login Successful", "success");
+        router.push("/"); // home page or dashboard
       } else {
         Swal.fire("Error", data.message || "Invalid login", "error");
       }
     } catch (err) {
       console.error(err);
-      Swal.fire("Error", "Something went wrong", "error");
       setLoading(false);
+      Swal.fire("Error", "Something went wrong", "error");
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-zinc-950">
-      {/* ✅ Login Form */}
       <main className="flex flex-col items-center justify-center w-full p-6">
         <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8">
           <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-6">
@@ -117,14 +121,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-               {/* Register Link */}
+          {/* Register Link */}
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-4">
             Don’t have an account?{" "}
             <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
               Register
             </Link>
           </p>
-
         </div>
       </main>
     </div>
