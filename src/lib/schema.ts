@@ -93,15 +93,27 @@ export const addresses = mysqlTable("addresses", {
 
 export const orders = mysqlTable("orders", {
   id: serial("id").primaryKey(),
+
   user_id: int("user_id").notNull(),
-  total_amount: decimal("total_amount", { precision: 10, scale: 0 }).notNull(),
-  payment_method: varchar("payment_method", { length: 50 }).notNull().default("online"),
-  status: varchar("status", { length: 20 }).default("pending"),
-  address_id: int("address_id").notNull(),
+  transaction_id: varchar("transaction_id", { length: 255 }),  // ✅ FIXED
+  email: varchar("email", { length: 255 }),
+  user_name: varchar("user_name", { length: 255 }),
+
+  total_amount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+
+  order_status: varchar("order_status", { length: 50 }).default("pending"),
+  payment_method: varchar("payment_method", { length: 50 }).default("cod"),
+
   items: text("items").notNull(),
+  address_id: int("address_id"),
+  shipping_address: text("shipping_address"),
+  city: varchar("city", { length: 255 }),
+  state: varchar("state", { length: 255 }),
+  pincode: varchar("pincode", { length: 20 }),
+  shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
+  discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
   created_at: timestamp("created_at").defaultNow(),
 });
-
 
 export const order_items = mysqlTable("order_items", {
   id: serial("id").primaryKey(),

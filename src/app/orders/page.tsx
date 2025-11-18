@@ -21,36 +21,58 @@ export default function AdminOrdersPage() {
       <div className="flex-1 ml-64">
         <Topbar />
         <div className="p-6">
-          <h1 className="text-2xl font-bold mb-4">Orders</h1>
+      <h1 className="text-xl font-bold mb-4">Orders List</h1>
 
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2">#</th>
-                <th className="p-2">User</th>
-                <th className="p-2">Total</th>
-                <th className="p-2">Status</th>
-                <th className="p-2">Date</th>
-                <th className="p-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o, idx) => (
+      <div className="bg-white rounded shadow overflow-x-auto">
+        <table className="min-w-full text-sm border-collapse">
+          <thead className="bg-gray-100 border-b">
+            <tr>
+              <th className="p-2 text-left">ID</th>
+              <th className="p-2 text-left">Customer</th>
+              <th className="p-2 text-left">Email</th>
+              <th className="p-2 text-left">Total + Shipping</th>
+              <th className="p-2 text-left">Status</th>
+              <th className="p-2 text-left">Date</th>
+              <th className="p-2 text-left">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {orders.length > 0 ? (
+              orders.map((o) => (
                 <tr key={o.id} className="border-t">
                   <td className="p-2">{o.id}</td>
-                  <td className="p-2">{o.user?.name || o.user?.email || "—"}</td>
-                  <td className="p-2">₹{o.total_amount}</td>
-                  <td className="p-2">{o.status}</td>
-                  <td className="p-2">{new Date(o.created_at).toLocaleString()}</td>
+                  <td className="p-2">{o.user_name}</td>
+                  <td className="p-2">{o.email}</td>
                   <td className="p-2">
-                    <button onClick={() => router.push(`/admin/orders/${o.id}`)} className="text-blue-600 hover:underline">View</button>
+                    ₹{Number(o.total_amount) + Number(o.shipping_charge)}
+                  </td>
+                  <td className="p-2">{o.order_status}</td>
+                  <td className="p-2">
+                    {new Date(o.created_at).toLocaleString()}
+                  </td>
+                  <td className="p-2">
+                    <button
+                      onClick={() => router.push(`/admin/orders/${o.id}`)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="p-4 text-center text-gray-500">
+                  No orders found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+    </div>
+   </div>
     </div>
   );
 }

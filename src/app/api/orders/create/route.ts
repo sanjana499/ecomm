@@ -63,16 +63,30 @@ export async function POST(req: Request) {
   .insert(orders)
   .values({
     user_id: userId,
-    total_amount: total.toString(),
-    status: "pending",
-    address_id: body.address_id ?? 0,       // ADD THIS
-    items: JSON.stringify(itemsWithPrice),  // ADD THIS
-    payment_method: body.payment_method ?? "COD",
+
+    email: body.email,
+    user_name: body.user_name,
+
+    total_amount: total.toString(),  // REQUIRED ✔
+
+    shipping_charge: body.shipping_charge ?? "0",
+    discount: body.discount ?? "0",
+
+    transaction_id: body.transaction_id ?? null,
+    payment_method: body.payment_method ?? "online",
+
+    order_status: "pending",
+
+    shipping_address: body.shipping_address,
+    city: body.city,
+    state: body.state,
+    pincode: body.pincode,
+
+    address_id: body.address_id ?? 0,
+
+    items: JSON.stringify(itemsWithPrice),
   })
   .$returningId();
-
-
-
   const orderId = inserted[0]?.id;
 
   // If not returned (rare), fetch latest
