@@ -81,14 +81,15 @@ export const cart = mysqlTable("cart", {
 });
 
 export const addresses = mysqlTable("addresses", {
-  id: serial("id").primaryKey(),
+  id: int("id").primaryKey().autoincrement(),
   userId: int("user_id"),
-  name: varchar("name", { length: 100 }),
+  name: varchar("name", { length: 255 }),
   phone: varchar("phone", { length: 20 }),
+  flat_no: varchar("flat_no", { length: 255 }),
   address: text("address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 100 }),
-  pincode: varchar("pincode", { length: 10 }),
+  city: varchar("city", { length: 255 }),
+  state: varchar("state", { length: 255 }),
+  pincode: varchar("pincode", { length: 20 }),
 });
 
 export const orders = mysqlTable("orders", {
