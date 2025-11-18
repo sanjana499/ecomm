@@ -30,6 +30,7 @@ export default function RegisterPage() {
     country: "",
     state: "",
     city: "",
+    phone_no:""
   });
 
   const handleChange = (e: any) => {
@@ -62,6 +63,7 @@ export default function RegisterPage() {
       !form.country ||
       !form.state ||
       !form.city
+      
     ) {
       alert("Please fill in all fields!");
       return;

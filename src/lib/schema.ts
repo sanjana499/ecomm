@@ -16,12 +16,15 @@ import {
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+   email: varchar("email", { length: 255 }).unique(),
   password: varchar("password", { length: 255 }).notNull(),
   country: varchar("country", { length: 255 }).notNull(),
   state: varchar("state", { length: 255 }).notNull(),
   city: varchar("city", { length: 255 }).notNull(),
   customerId: varchar("customer_id", { length: 20 }).notNull(),
+    // ⭐ NEW FIELDS
+   phoneNo: varchar("phone_no", { length: 20 }).notNull().unique(),
+  otp: varchar("otp", { length: 10 }),    
   createdAt: timestamp("created_at").defaultNow()
 });
 
