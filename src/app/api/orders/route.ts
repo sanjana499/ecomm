@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db"; // your drizzle db config
-import { orders, users } from "@/lib/schema"; 
+import { db } from "@/lib/db";
+import { orders, users } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function GET() {
@@ -14,7 +14,6 @@ export async function GET() {
         order_status: orders.order_status,
         created_at: orders.created_at,
 
-        // From users table
         user_name: users.name,
         email: users.email,
       })
@@ -28,3 +27,36 @@ export async function GET() {
     return NextResponse.json([]);
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    await db.insert(orders).values({
+      user_id: body.user_id,
+      product_id: body.product_id,
+
+      total_amount: body.total_amount,
+      shipping_charge: body.shipping_charge ?? 0,
+      discount: body.discount ?? 0,
+
+      items: JSON.stringify(body.items),
+      address_id: body.address_id,
+
+      shipping_address: body.shipping_address ?? "",
+      city: body.city ?? "",
+      state: body.state ?? "",
+      pincode: body.pincode ?? "",
+
+      payment_method: body.payment_method ?? "cod",
+      order_status: body.order_status ?? "pending",
+    });
+
+    return NextResponse.json({ success: true, message: "Order created" });
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json({ success: false, error: "Failed to create order" });
+  }
+}
+
+

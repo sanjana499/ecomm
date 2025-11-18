@@ -6,7 +6,7 @@ import {
   varchar,
   text,
   timestamp,
-  mysqlEnum as drizzleEnum, 
+  mysqlEnum as drizzleEnum,
   decimal,
   boolean,
   serial,
@@ -16,15 +16,15 @@ import {
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-   email: varchar("email", { length: 255 }).unique(),
+  email: varchar("email", { length: 255 }).unique(),
   password: varchar("password", { length: 255 }).notNull(),
   country: varchar("country", { length: 255 }).notNull(),
   state: varchar("state", { length: 255 }).notNull(),
   city: varchar("city", { length: 255 }).notNull(),
   customerId: varchar("customer_id", { length: 20 }).notNull(),
-    // ⭐ NEW FIELDS
-   phoneNo: varchar("phone_no", { length: 20 }).notNull().unique(),
-  otp: varchar("otp", { length: 10 }),    
+  // ⭐ NEW FIELDS
+  phoneNo: varchar("phone_no", { length: 20 }).notNull().unique(),
+  otp: varchar("otp", { length: 10 }),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -57,17 +57,17 @@ export const categories = mysqlTable("categories", {
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull(), // ✅ add this
   description: text("description"),
-  status: boolean("status").notNull().default(true).$type<boolean>(), 
+  status: boolean("status").notNull().default(true).$type<boolean>(),
   image: varchar("image", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow(),      // ✅ fixed
   updatedAt: timestamp("updated_at").onUpdateNow().defaultNow(), // ✅ fixed
   deletedAt: timestamp("deleted_at"),                   // ✅ fixed
 });
 
-export const sub_categories = mysqlTable("sub_categories",{
-   id: int("id").autoincrement().primaryKey(),
-   name: varchar("name", { length: 255 }).notNull(),
-  categories_id: int("categories_id").notNull(),  
+export const sub_categories = mysqlTable("sub_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  categories_id: int("categories_id").notNull(),
   description: varchar("description", { length: 500 }).default(""), // Product description
   status: varchar("status", { length: 50 }).default("active"),
   created_at: timestamp("created_at").defaultNow(),
@@ -107,7 +107,7 @@ export const orders = mysqlTable("orders", {
 
   order_status: varchar("order_status", { length: 50 }).default("pending"),
   payment_method: varchar("payment_method", { length: 50 }).default("cod"),
-
+  product_id: int("product_id").notNull(),
   items: text("items").notNull(),
   address_id: int("address_id"),
   shipping_address: text("shipping_address"),

@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orders, order_items, cart, products } from "@/lib/schema";
 import { getUserIdFromReq } from "@/lib/db";
-import { eq, inArray, desc } from "drizzle-orm";
-
-
+import { eq, inArray } from "drizzle-orm";
 
 export async function POST(req: Request) {
   const userId = await getUserIdFromReq(req);
@@ -38,7 +36,6 @@ export async function POST(req: Request) {
 
   // Fetch product prices
   const productIds = items.map((i) => i.productId);
-
   const productsRows = await db
     .select()
     .from(products)
@@ -54,66 +51,54 @@ export async function POST(req: Request) {
     return { ...i, price };
   });
 
-  const total = itemsWithPrice.reduce(
-    (s, it) => s + it.price * it.quantity,
-    0
-  );
+  const total = itemsWithPrice.reduce((s, it) => s + it.price * it.quantity, 0);
 
-  const inserted = await db
+  // ✅ Insert into orders table and return auto-generated ID
+  // Insert into orders table
+const insertedOrder = await db
   .insert(orders)
   .values({
     user_id: userId,
-
+    product_id: itemsWithPrice[0]?.productId ?? 0, // legacy
     email: body.email,
     user_name: body.user_name,
-
-    total_amount: total.toString(),  // REQUIRED ✔
-
+    total_amount: total.toString(),
     shipping_charge: body.shipping_charge ?? "0",
     discount: body.discount ?? "0",
-
     transaction_id: body.transaction_id ?? null,
     payment_method: body.payment_method ?? "online",
-
     order_status: "pending",
-
     shipping_address: body.shipping_address,
     city: body.city,
     state: body.state,
     pincode: body.pincode,
-
     address_id: body.address_id ?? 0,
-
     items: JSON.stringify(itemsWithPrice),
   })
-  .$returningId();
-  const orderId = inserted[0]?.id;
+  .$returningId(); // ✅ this works for MySQL
 
-  // If not returned (rare), fetch latest
-  let createdOrderId = orderId;
-  if (!createdOrderId) {
-    const last = await db
-      .select()
-      .from(orders)
-      .orderBy(desc(orders.created_at))
-      .limit(1);
-    createdOrderId = last[0]?.id;
+const orderId = insertedOrder[0];
+  if (!orderId) {
+    return NextResponse.json(
+      { success: false, error: "Failed to create order" },
+      { status: 500 }
+    );
   }
 
-  // Insert order items
+  // Insert into order_items table
   await Promise.all(
     itemsWithPrice.map((it) =>
       db.insert(order_items).values({
-        order_id: Number(createdOrderId),
+        order_id: Number(orderId),
         product_id: Number(it.productId),
-        price: it.price.toString(),          // FIXED ✔
+        price: it.price.toString(),
         quantity: Number(it.quantity),
       })
     )
-  ); 
+  );
 
   // Clear cart
   await db.delete(cart).where(eq(cart.userId, userId));
 
-  return NextResponse.json({ success: true, orderId: createdOrderId });
+  return NextResponse.json({ success: true, orderId });
 }

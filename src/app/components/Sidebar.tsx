@@ -96,7 +96,7 @@ export default function Sidebar() {
                   onClick={() => {
                     const latestOrderId = orders[0]?.id || 1;   // 👍 safe fallback
                     setActive("Order Details");
-                    router.push(`/orders/${latestOrderId}`);
+                    router.push(`/admin/orders/${latestOrderId}`);
                   }}
                   className={`text-sm px-3 py-1.5 rounded-md text-left ${active === "Order Details"
                       ? "bg-green-100 text-green-700 font-semibold"

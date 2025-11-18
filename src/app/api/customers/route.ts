@@ -7,6 +7,10 @@ import { eq } from "drizzle-orm";
 export async function GET() {
   try {
     const allUsers = await db.select().from(users);
+const res = await fetch("/api/customers", { cache: "no-store" });
+const data = await res.json();
+
+const customers: any[] = Array.isArray(data) ? data : [];
 
     const list = [];
 
