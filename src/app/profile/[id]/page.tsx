@@ -84,6 +84,130 @@ const ProfilePage = () => {
     };
 
 
+    // Deactivate Account
+    const handleDeactivate = () => {
+        Swal.fire({
+            html: `
+        <div class="flex flex-col md:flex-row gap-6 p-4 h-full">
+            <!-- Left: Info text -->
+            <div class="flex-1 space-y-2 pr-4 border-r border-gray-200 overflow-y-auto">
+                <p class="font-semibold mb-4">When you deactivate your account</p>
+                <p>You are logged out of your Flipkart Account</p>
+                <p>Your public profile on Flipkart is no longer visible</p>
+                <p>Your reviews/ratings are still visible, while your profile information is shown as ‘unavailable’ as a result of deactivation.</p>
+                <p>Your wishlist items are no longer accessible through the associated public hyperlink. Wishlist is shown as ‘unavailable’ as a result of deactivation.</p>
+                <p>You will be unsubscribed from receiving promotional emails from Flipkart</p>
+                <p>Your account data is retained and is restored in case you choose to reactivate your account</p>
+                <hr class="my-2">
+                <p><b>How do I reactivate my Flipkart account?</b> Simply login with your registered email id or mobile number and password used prior to deactivation. Your account data is fully restored. Default settings are applied and you will be subscribed to receive promotional emails. Reactivation is possible on Desktop only.</p>
+                <hr class="my-2">
+            </div>
+
+            <!-- Right: Form -->
+            <div class="flex-1 flex flex-col justify-between p-4 bg-gray-50 rounded h-full">
+                <!-- Top: Warning text -->
+                <div>
+                    <p class="font-semibold mb-4">Are you sure you want to leave?</p>
+
+                    <!-- Inputs with proper spacing -->
+                    <div class="flex flex-col gap-4">
+                        <input type="text" value="shubh4917@gmail.com" disabled class="w-full px-3 py-2 rounded border bg-gray-100">
+                        <input type="text" value="+916306675177" disabled class="w-full px-3 py-2 rounded border bg-gray-100">
+                        <input type="text" id="swal-otp" class="swal2-input" placeholder="Enter received OTP">
+                    </div>
+                </div>
+
+                <!-- Buttons immediately below inputs -->
+                <div class="flex flex-col gap-2 mt-2">
+                    <button id="confirm-deactivate" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                        DEACTIVATE
+                    </button>
+                    <button id="cancel-deactivate" class="w-full bg-gray-200 text-blue-800 py-2 rounded hover:bg-gray-300">
+                        NO, LET ME STAY
+                    </button>
+                </div>
+            </div>
+        </div>
+        `,
+            showConfirmButton: false,
+            showCancelButton: false,
+            showCloseButton: true,
+            width: '90%',
+            padding: '0',
+            grow: 'fullscreen',
+            didOpen: () => {
+                const confirmBtn = Swal.getPopup()?.querySelector('#confirm-deactivate') as HTMLButtonElement;
+                const cancelBtn = Swal.getPopup()?.querySelector('#cancel-deactivate') as HTMLButtonElement;
+                const otpInput = Swal.getPopup()?.querySelector('#swal-otp') as HTMLInputElement;
+
+                confirmBtn.addEventListener('click', () => {
+                    if (!otpInput.value) {
+                        Swal.showValidationMessage('Please enter OTP to confirm');
+                        return;
+                    }
+                    // Call API to deactivate account here
+                    Swal.close();
+                    Swal.fire('Deactivated!', 'Your account has been deactivated.', 'success');
+                });
+
+                cancelBtn.addEventListener('click', () => {
+                    Swal.close();
+                });
+            }
+        });
+    };
+
+
+
+    // Delete Account (Flipkart style with type-to-confirm)
+    const handleDelete = () => {
+        Swal.fire({
+            title: 'Delete Your Account?',
+            html: `
+            <div class="text-left text-sm space-y-2">
+                <p>There are no pending transactions. If there are, complete them first.</p>
+                <p>Deleting account is permanent. You will lose order history, saved addresses, payment methods, wishlists, etc.</p>
+                <p>You will forfeit Gift Cards / SuperCoin balances.</p>
+                <p>Platform may retain certain data for legal compliance and security.</p>
+                <p>After deletion, logging in with same email/phone creates a new account.</p>
+                <hr class="my-2">
+                <p>I have read and agreed to the Terms and Conditions.</p>
+                <input type="checkbox" id="swal-terms" class="mr-2"> I agree<br>
+                <p>I acknowledge I have no Gift Card / SuperCoin balance or willing to forfeit</p>
+                <input type="checkbox" id="swal-balance" class="mr-2"> I acknowledge<br>
+                <p>I acknowledge I cannot return/replace past orders</p>
+                <input type="checkbox" id="swal-orders" class="mr-2"> I acknowledge<br>
+                <p>Please tell us why you’re leaving:</p>
+                <textarea id="swal-feedback" class="swal2-textarea" placeholder="Your feedback..."></textarea>
+            </div>
+        `,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonText: 'DELETE ACCOUNT',
+            cancelButtonText: 'CANCEL',
+            reverseButtons: true,
+            focusCancel: true,
+            preConfirm: () => {
+                const terms = (Swal.getPopup()?.querySelector('#swal-terms') as HTMLInputElement).checked;
+                const balance = (Swal.getPopup()?.querySelector('#swal-balance') as HTMLInputElement).checked;
+                const orders = (Swal.getPopup()?.querySelector('#swal-orders') as HTMLInputElement).checked;
+                if (!terms || !balance || !orders) {
+                    Swal.showValidationMessage('Please acknowledge all required points');
+                }
+                const feedback = (Swal.getPopup()?.querySelector('#swal-feedback') as HTMLTextAreaElement).value;
+                return { terms, balance, orders, feedback };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call API to delete account
+                Swal.fire('Deleted!', 'Your account has been permanently deleted.', 'success');
+            }
+        });
+    };
+
+
+
+
     return (
         <div className="min-h-screen bg-gray-100 p-6">
             <div className="max-w-7xl mx-auto flex gap-6">
@@ -356,12 +480,14 @@ const ProfilePage = () => {
                         <div className="space-y-4 mt-10">
 
                             <button
+                                onClick={handleDeactivate}
                                 className="w-full text-left text-sm text-blue-600 font-semibold py-2 hover:bg-red-50 rounded"
                             >
                                 Deactivate Account
                             </button>
 
                             <button
+                                onClick={handleDelete}
                                 className="w-full text-left text-sm text-red-600 font-semibold py-2 hover:bg-red-50 rounded"
                             >
                                 Delete Account
@@ -371,7 +497,7 @@ const ProfilePage = () => {
                                 <img
                                     src="/minimalBoat.jpg"
                                     alt="Account Security"
-                                    className="w-full h-48 object-cover"
+                                    className="w-full h-48 object-fill"
                                 />
                             </div>
                         </div>
