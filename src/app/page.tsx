@@ -14,6 +14,12 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
 
+  
+
+  //Login Show or Logged in link not show
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
@@ -42,9 +48,6 @@ export default function Home() {
     { img: "/uploads/images/img5.jpg" },
   ];
 
-
-
-
   // ✅ Fetch products from DB
   useEffect(() => {
     const fetchProducts = async () => {
@@ -69,6 +72,13 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(nextSlide, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  //Login Show or Logged in link not show
+  useEffect(() => {
+    const storedId = localStorage.getItem("userId");
+    const storedName = localStorage.getItem("userName");
+    if (storedId && storedName) setUser({ id: storedId, name: storedName });
   }, []);
 
   return (
@@ -162,12 +172,15 @@ export default function Home() {
               )}
             </div>
 
-            <a
-              href="/login"
-              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-            >
-              Login
-            </a>
+            {/* Login link ONLY if user is not logged in */}
+            {!user && (
+              <a
+                href="/login"
+                className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+              >
+                Login
+              </a>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -183,9 +196,62 @@ export default function Home() {
                 2
               </span>
             </button>
-            <button>
+
+            {/* Profile dropdown if logged in */}
+            {user && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
+                    {user.name.charAt(0)}
+                  </div>
+                  <span className="text-zinc-700 dark:text-white font-medium text-sm">{user.name}</span>
+                  <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
+                    {/* My Profile link */}
+                    {/* <a
+                      href={`/profile?userId=${user.id}`} // GET parameter se user id pass karenge
+                      className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      My Profile
+                    </a> */}
+
+                    <a
+                      href={`/profile/${user.id}`} // path param
+                      className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      My Profile
+                    </a>
+
+                    {/* Logout */}
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("userId");
+                        localStorage.removeItem("userName");
+                        setUser(null);
+                        setIsUserMenuOpen(false);
+                        Swal.fire("Success", "Logged out successfully", "success");
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+
+            {/* <button>
               <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-            </button>
+            </button> */}
 
             <button
               className="md:hidden"

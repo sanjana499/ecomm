@@ -20,7 +20,9 @@ export default function ProductDetails() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [addedQty, setAddedQty] = useState(0);
-
+  //Login Show or Logged in link not show
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // 🔹 Load Categories
   useEffect(() => {
@@ -172,8 +174,60 @@ export default function ProductDetails() {
             </span>
           </button>
 
-          <User className="w-6 h-6" />
+{user && (
+              <div className="relative">
+                {/* Profile Button */}
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
+                >
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
+                    {user.name.charAt(0)}
+                  </div>
 
+                  {/* Username */}
+                  <span className="text-zinc-700 dark:text-white font-medium text-sm">
+                    {user.name}
+                  </span>
+
+                  {/* Dropdown arrow */}
+                  <ChevronDown
+                    className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""
+                      }`}
+                  />
+                </button>
+
+                {/* Dropdown */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
+                    <div className="py-1">
+                      {/* My Profile - upar */}
+                      <Link
+                        href="/profile"
+                        className="w-full block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      >
+                        My Profile
+                      </Link>
+
+                      {/* Logout - niche */}
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("userId");
+                          localStorage.removeItem("userName");
+                          setUser(null);
+                          setIsUserMenuOpen(false);
+                          Swal.fire("Success", "Logged out successfully", "success");
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <Menu className="w-6 h-6" />
           </button>
