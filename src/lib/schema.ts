@@ -55,13 +55,13 @@ export const products = mysqlTable("products", {
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull(), // ✅ add this
+  slug: varchar("slug", { length: 255 }).notNull(),
   description: text("description"),
   status: boolean("status").notNull().default(true).$type<boolean>(),
   image: varchar("image", { length: 500 }),
-  createdAt: timestamp("created_at").defaultNow(),      // ✅ fixed
-  updatedAt: timestamp("updated_at").onUpdateNow().defaultNow(), // ✅ fixed
-  deletedAt: timestamp("deleted_at"),                   // ✅ fixed
+  createdAt: timestamp("created_at").defaultNow(),     
+  updatedAt: timestamp("updated_at").onUpdateNow().defaultNow(), 
+  deletedAt: timestamp("deleted_at"),                    
 });
 
 export const sub_categories = mysqlTable("sub_categories", {
@@ -97,17 +97,17 @@ export const addresses = mysqlTable("addresses", {
 
 export const orders = mysqlTable("orders", {
   id: serial("id").primaryKey(),
-
   user_id: int("user_id").notNull(),
   transaction_id: varchar("transaction_id", { length: 255 }),  // ✅ FIXED
   email: varchar("email", { length: 255 }),
-  user_name: varchar("user_name", { length: 255 }),
-
+  name: varchar("name", { length: 255 }),
   total_amount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
-
+  // order_id: int("order_id").notNull(),
+  customerId: varchar("customer_id", { length: 20 }).notNull(),
   order_status: varchar("order_status", { length: 50 }).default("pending"),
   payment_method: varchar("payment_method", { length: 50 }).default("cod"),
-  product_id: int("product_id").notNull(),
+  product_ids: text("product_ids").notNull(),
+  quantities: text("quantities").notNull(), 
   items: text("items").notNull(),
   address_id: int("address_id"),
   shipping_address: text("shipping_address"),

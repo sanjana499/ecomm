@@ -135,6 +135,8 @@ export async function GET() {
       .leftJoin(sub_categories, eq(products.sub_category_id, sub_categories.id))
       .orderBy(desc(products.id)); // ✅ latest products appear first
 
+      
+
     // 🧠 Generate unique filter data
     const filters = {
       colors: [...new Set(allProducts.map((p) => p.color).filter(Boolean))],

@@ -54,30 +54,38 @@ export async function POST(req: Request) {
   const total = itemsWithPrice.reduce((s, it) => s + it.price * it.quantity, 0);
 
   // ✅ Insert into orders table and return auto-generated ID
-  // Insert into orders table
-const insertedOrder = await db
-  .insert(orders)
-  .values({
+
+  const insertedOrder = await db.insert(orders).values({
     user_id: userId,
-    product_id: itemsWithPrice[0]?.productId ?? 0, // legacy
+  
+    product_ids: JSON.stringify(itemsWithPrice.map(i => i.productId)),
+    quantities: JSON.stringify(itemsWithPrice.map(i => i.quantity)),
+  
+    customerId: body.customer_id,
+  
     email: body.email,
-    user_name: body.user_name,
+    name: body.name,  // ✅ FIXED — you are getting name from users table
+  
     total_amount: total.toString(),
     shipping_charge: body.shipping_charge ?? "0",
     discount: body.discount ?? "0",
+  
     transaction_id: body.transaction_id ?? null,
     payment_method: body.payment_method ?? "online",
     order_status: "pending",
+  
     shipping_address: body.shipping_address,
     city: body.city,
     state: body.state,
     pincode: body.pincode,
+  
     address_id: body.address_id ?? 0,
+  
     items: JSON.stringify(itemsWithPrice),
-  })
-  .$returningId(); // ✅ this works for MySQL
+  }).$returningId();
+  
 
-const orderId = insertedOrder[0];
+  const orderId = insertedOrder[0];
   if (!orderId) {
     return NextResponse.json(
       { success: false, error: "Failed to create order" },

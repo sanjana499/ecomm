@@ -379,7 +379,7 @@ export default function CartPage() {
 
 
                   {/* Saved Items Section */}
-                  {savedItems.length > 0 && (
+                  {/* {savedItems.length > 0 && (
                     <div className="mt-6">
                       <h2 className="text-lg font-semibold mb-2">Saved for Later</h2>
                       {savedItems.map(item => (
@@ -394,7 +394,7 @@ export default function CartPage() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  )} */}
 
                   {/* Remove Button */}
                   <button
@@ -440,8 +440,6 @@ export default function CartPage() {
               >
                 Proceed to Checkout
               </button> */}
-
-
             </div>
 
           ))}
@@ -468,7 +466,6 @@ export default function CartPage() {
                   const userId = localStorage.getItem("userId");
 
                   if (!userId) {
-                    // 🛑 User not logged in → Show toast message
                     Swal.fire({
                       icon: "warning",
                       title: "Please login first",

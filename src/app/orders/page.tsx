@@ -59,8 +59,6 @@ export default function AdminOrdersPage() {
   });
 };
 
-
-
   return (
     <div className="flex bg-white text-gray-800 min-h-screen">
       <Sidebar />

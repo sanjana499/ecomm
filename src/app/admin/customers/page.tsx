@@ -10,42 +10,45 @@ export default function CustomersPage() {
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    const pageSize = 10; // default rows per page
+    const pageSize = 10;
 
-   useEffect(() => {
-    fetch("/api/customers")
-        .then((res) => res.json())
-        .then((data) => {
-            if (Array.isArray(data)) {
-                setCustomers(data);
-            } else {
-                setCustomers([]);  
-            }
-        })
-        .catch(() => setCustomers([]));
-}, []);
+    useEffect(() => {
+        fetch("/api/customers")
+            .then((res) => res.json())
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setCustomers(data);
+                } else {
+                    setCustomers([]);
+                }
+            })
+            .catch(() => setCustomers([]));
+    }, []);
 
-
-    
     // -------------------------
     // FILTERED DATA
     // -------------------------
-    const filteredData = Array.isArray(customers)
-    ? customers.filter((c) => {
+    const filteredData = customers.filter((c) => {
         return (
             c.name?.toLowerCase().includes(search.toLowerCase()) ||
             c.email?.toLowerCase().includes(search.toLowerCase()) ||
             c.country?.toLowerCase().includes(search.toLowerCase())
         );
-    })
-    : [];
+    });
 
     // -------------------------
     // PAGINATION LOGIC
     // -------------------------
     const totalPages = Math.ceil(filteredData.length / pageSize);
     const startIndex = (currentPage - 1) * pageSize;
-    const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
+    const paginated = filteredData.slice(startIndex, startIndex + pageSize);
+
+    // -------------------------
+    // SORT BASED ON customerId (ASC)
+    // -------------------------
+    const sortedCustomers = [...paginated].sort(
+        (a, b) => a.customerId - b.customerId
+    );
 
     return (
         <div className="flex bg-white text-gray-800 min-h-screen">
@@ -57,20 +60,19 @@ export default function CustomersPage() {
                     {/* Top Bar */}
                     <div className="flex items-center justify-between mb-4">
 
-                        {/* Search Input with Clear Button */}
+                        {/* Search Input */}
                         <div className="relative w-64">
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
-                                    setCurrentPage(1); // reset page
+                                    setCurrentPage(1);
                                 }}
                                 placeholder="Search customers..."
                                 className="border px-4 py-2 rounded-lg w-full pr-10"
                             />
 
-                            {/* Cancel (X) Button */}
                             {search && (
                                 <button
                                     onClick={() => {
@@ -83,7 +85,6 @@ export default function CustomersPage() {
                                 </button>
                             )}
                         </div>
-
 
                         <div className="flex items-center gap-2">
                             <select className="border px-4 py-2 rounded-lg">
@@ -112,29 +113,25 @@ export default function CustomersPage() {
                             </thead>
 
                             <tbody>
-                                {paginatedData.map((c: any, i: number) => (
-                                    <tr key={i} className="border-t hover:bg-gray-50 transition">
+                                {sortedCustomers.map((c: any, i: number) => (
+                                    <tr key={c.id} className="border-t hover:bg-gray-50 transition">
 
                                         <td className="p-4"><input type="checkbox" /></td>
 
-                                        {/* Customer Info */}
+                                        {/* Customer */}
                                         <td className="p-4 flex items-center gap-3">
-
-
-
-                                            {/* Name + Email */}
                                             <div>
                                                 <p className="font-semibold">{c.name}</p>
                                                 <p className="text-gray-500 text-xs">{c.email}</p>
                                             </div>
                                         </td>
 
-                                        {/* Customer ID */}
+                                        {/* 2-digit Customer ID (serial based on sorted customerId) */}
                                         <td className="p-4 text-gray-700 font-medium">
-                                            {c.customerId}
+                                            {(i + 1).toString().padStart(2, "0")}
                                         </td>
 
-                                        {/* Country + Flag */}
+                                        {/* Country */}
                                         <td className="p-4 flex items-center gap-2">
                                             {c.countryCode ? (
                                                 <Image
@@ -143,9 +140,8 @@ export default function CustomersPage() {
                                                     src={`https://flagsapi.com/${c.countryCode.toUpperCase()}/flat/32.png`}
                                                     alt={c.country}
                                                 />
-                                            ) : (
-                                                "N/A"
-                                            )}
+                                            ) : "N/A"}
+
                                             <span>{c.country}</span>
                                         </td>
 
@@ -160,7 +156,7 @@ export default function CustomersPage() {
                         </table>
                     </div>
 
-                    {/* Pagination Buttons */}
+                    {/* Pagination */}
                     <div className="flex gap-2 mt-4 justify-end">
                         <button
                             disabled={currentPage === 1}

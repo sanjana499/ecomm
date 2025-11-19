@@ -16,6 +16,7 @@ export async function GET() {
         img: products.img,
         price: products.price,
         offerPrice: products.offerPrice,
+        
       })
       .from(cart)
       .leftJoin(products, eq(cart.productId, products.id));
