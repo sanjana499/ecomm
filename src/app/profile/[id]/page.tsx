@@ -38,7 +38,7 @@ const ProfilePage = () => {
     const [editingField, setEditingField] = useState<string | null>(null);
     const [formData, setFormData] = useState<User | null>(null);
 
-    
+
 
     const router = useRouter();
     // Track active menu page
@@ -251,13 +251,10 @@ const ProfilePage = () => {
 
                         {/* Row 2: Gender */}
                         <div className="flex flex-col gap-3 relative mt-10 p-6">
-
-                            {/* Label */}
                             <label className="text-gray-700 text-sm font-semibold">
                                 Your Gender
                             </label>
 
-                            {/* SAME OPTIONS – just moved below the label */}
                             <div className="flex gap-6 mt-2">
                                 {["Male", "Female"].map((g) => (
                                     <label
@@ -279,7 +276,6 @@ const ProfilePage = () => {
                                 ))}
                             </div>
                         </div>
-
 
                         {/* Row 3: Email */}
                         <div className="relative w-1/3 mt-10 p-6">
@@ -322,50 +318,68 @@ const ProfilePage = () => {
                                 Edit
                             </button>
                         </div>
-                    </div>
 
 
+                        {/* 🔥🔥🔥 NOW FAQs + DELETE + IMAGE ARE INSIDE SAME CARD 🔥🔥🔥 */}
 
-                    {/* FAQs */}
-                    <div className="bg-white rounded-lg shadow p-6 space-y-4">
-                        <h2 className="text-xl font-semibold">FAQs</h2>
-                        <div>
-                            <p className="font-semibold">What happens when I update my email address (or mobile number)?</p>
-                            <p className="text-gray-600">
-                                Your login email id (or mobile number) changes, likewise. You'll receive all your account related communication on your updated email address (or mobile number).
-                            </p>
-                        </div>
-                        <div>
-                            <p className="font-semibold">When will my Flipkart account be updated with the new email address (or mobile number)?</p>
-                            <p className="text-gray-600">
-                                It happens as soon as you confirm the verification code sent to your email (or mobile) and save the changes.
-                            </p>
-                        </div>
-                        <div>
-                            <p className="font-semibold">What happens to my existing Flipkart account when I update my email address (or mobile number)?</p>
-                            <p className="text-gray-600">
-                                Updating your email address (or mobile number) doesn't invalidate your account. Your account remains fully functional.
-                            </p>
-                        </div>
-                        <div>
-                            <p className="font-semibold">Does my Seller account get affected when I update my email address?</p>
-                            <p className="text-gray-600">
-                                Flipkart has a 'single sign-on' policy. Any changes will reflect in your Seller account also.
-                            </p>
-                        </div>
-                    </div>
+                        {/* FAQs */}
+                        <div className="space-y-4 mt-10">
+                            <h2 className="text-xl font-semibold">FAQs</h2>
 
-                    {/* Deactivate/Delete Account */}
-                    <div className="bg-white rounded-lg shadow p-6 flex gap-4">
-                        <button className="px-4 py-2 border rounded hover:bg-red-100 text-red-600 font-semibold">
-                            Deactivate Account
-                        </button>
-                        <button className="px-4 py-2 border rounded hover:bg-red-200 text-red-700 font-semibold">
-                            Delete Account
-                        </button>
+                            <div>
+                                <p className="font-semibold">What happens when I update my email address (or mobile number)?</p>
+                                <p className="text-gray-600">
+                                    Your login email id (or mobile number) changes, likewise. You'll receive all your account related communication on your updated email address (or mobile number).
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-semibold">When will my Flipkart account be updated with the new email address (or mobile number)?</p>
+                                <p className="text-gray-600">
+                                    It happens as soon as you confirm the verification code sent to your email (or mobile) and save the changes.
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-semibold">What happens to my existing Flipkart account when I update my email address (or mobile number)?</p>
+                                <p className="text-gray-600">
+                                    Updating your email address (or mobile number) doesn't invalidate your account. Your account remains fully functional.
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-semibold">Does my Seller account get affected when I update my email address?</p>
+                                <p className="text-gray-600">
+                                    Flipkart has a 'single sign-on' policy. Any changes will reflect in your Seller account also.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Deactivate/Delete Account */}
+                        <div className="space-y-4 mt-10">
+
+                            <button
+                                className="w-full text-left text-sm text-blue-600 font-semibold py-2 hover:bg-red-50 rounded"
+                            >
+                                Deactivate Account
+                            </button>
+
+                            <button
+                                className="w-full text-left text-sm text-red-600 font-semibold py-2 hover:bg-red-50 rounded"
+                            >
+                                Delete Account
+                            </button>
+
+                            <div className="-mx-6 -mb-6 mt-4">
+                                <img
+                                    src="/minimalBoat.jpg"
+                                    alt="Account Security"
+                                    className="w-full h-48 object-cover"
+                                />
+                            </div>
+                        </div>
+
                     </div>
 
                 </main>
+
             </div>
         </div>
     );
