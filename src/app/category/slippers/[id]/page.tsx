@@ -1,4 +1,5 @@
 "use client";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
@@ -22,23 +23,48 @@ export default function SlippersPage() {
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 999999]);
+  const { id } = useParams(); 
+  const subcategoryId = Number(id);
 
   useEffect(() => {
+    if (!subcategoryId) return;
+
     async function fetchData() {
       try {
-        const res = await fetch("/api/product");
+        const res = await fetch(`/api/product?subcategory_id=${subcategoryId}`);
+
         if (!res.ok) throw new Error("Failed to load products");
+
         const { products, filters } = await res.json();
+
         setProducts(products);
         setFilters(filters);
-      } catch {
-        Swal.fire("Error", "Something went wrong while loading products", "error");
+      } catch (err) {
+        Swal.fire("Error", "Failed to load products", "error");
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
-  }, []);
+  }, [subcategoryId]);
+
+  // useEffect(() => {
+  //   async function fetchData() {
+  //     try {
+  //       const res = await fetch("/api/product");
+  //       if (!res.ok) throw new Error("Failed to load products");
+  //       const { products, filters } = await res.json();
+  //       setProducts(products);
+  //       setFilters(filters);
+  //     } catch {
+  //       Swal.fire("Error", "Something went wrong while loading products", "error");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  //   fetchData();
+  // }, []);
 
     useEffect(() => {
       fetch("/api/categories")
