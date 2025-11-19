@@ -1,67 +1,88 @@
-import { NextResponse } from "next/server";
+// src/app/api/orders/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, order_items, products, users } from "@/lib/schema";
-import { eq, inArray } from "drizzle-orm";
+import { orders } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
-export async function GET(req: Request, context: any) {
-  const { params } = await context;  // unwrap
-  const orderId = Number(params.id);
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ id: string }> } // params is a Promise
+) {
+  const params = await context.params; // ✅ unwrap the promise
+  const id = Number(params.id);
 
-  if (isNaN(orderId)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+  if (isNaN(id)) {
+    return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
   }
 
-  const o = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.id, orderId))
-    .limit(1);
-
-  if (!o.length)
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-
-  const order = o[0];
-
-  const items = await db
-    .select()
-    .from(order_items)
-    .where(eq(order_items.order_id, orderId));
-
-  const productIds = items.map((it) => it.product_id);
-
-  const prods = productIds.length
-    ? await db
-        .select()
-        .from(products)
-        .where(inArray(products.id, productIds))
-    : [];
-
-  const itemsWithProduct = items.map((it) => ({
-    ...it,
-    product: prods.find((p) => p.id === it.product_id) || null,
-  }));
-
-  let user = null;
-
-  if (order.user_id) {
-    const u = await db
+  try {
+    const data = await db
       .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
+        id: orders.id,
+        user_id: orders.user_id,
+        transaction_id: orders.transaction_id,
+        email: orders.email,
+        user_name: orders.user_name,
+        total_amount: orders.total_amount,
+        shipping_charge: orders.shipping_charge,
+        order_status: orders.order_status,
+        payment_method: orders.payment_method,
+        product_id: orders.product_id,
+        items: orders.items,
+        address_id: orders.address_id,
+        shipping_address: orders.shipping_address,
+        city: orders.city,
+        state: orders.state,
+        pincode: orders.pincode,
+        discount: orders.discount,
+        created_at: orders.created_at,
       })
-      .from(users)
-      .where(eq(users.id, order.user_id))
-      .limit(1);
+      .from(orders)
+      .where(eq(orders.id, id));
 
-    user = u[0] || null;
+    if (!data[0]) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    const order = { ...data[0], items: JSON.parse(data[0].items || "[]") };
+    return NextResponse.json(order);
+  } catch (err) {
+    console.error("API Error:", err);
+    return NextResponse.json({ error: "Failed to fetch order" }, { status: 500 });
   }
-
-  return NextResponse.json({
-    ...order,
-    items: itemsWithProduct,
-    user,
-  });
 }
 
 
+// DELETE /api/orders/:id
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const productId = parseInt(id);
+
+    if (isNaN(productId)) {
+      return NextResponse.json({ error: "Invalid product ID" }, { status: 400 });
+    }
+
+    const [product] = await db.select().from(orders).where(eq(orders.id, productId));
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    await db.delete(orders).where(eq(orders.id, productId));
+
+    return NextResponse.json({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  } catch (err: any) {
+    console.error("❌ DELETE /api/product/[id] error:", err);
+    return NextResponse.json(
+      { error: "Failed to delete product", details: err.message },
+      { status: 500 }
+    );
+  }
+}

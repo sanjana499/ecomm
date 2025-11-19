@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-react"; // ✅ added missing imports
 import { useRouter } from "next/navigation";
 
-
 export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
@@ -20,14 +19,19 @@ export default function CheckoutPage() {
   const [cartCount, setCartCount] = useState(0);
   const [cartItems, setCartItems] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editAddress, setEditAddress] = useState<any>(null);
   const paymentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [subtotal, setSubtotal] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [platformFee, setPlatformFee] = useState(5);
   const [total, setTotal] = useState(0);
+const [userId, setUserId] = useState<number | null>(null);
+
+ useEffect(() => {
+    const userIdStr = localStorage.getItem("userId");
+    setUserId(userIdStr ? parseInt(userIdStr) : null);
+  }, []);
+  
 
   useEffect(() => {
     setSubtotal(parseFloat(localStorage.getItem("cartSubtotal") || "0"));
@@ -35,12 +39,6 @@ export default function CheckoutPage() {
     setPlatformFee(parseFloat(localStorage.getItem("cartPlatformFee") || "5"));
     setTotal(parseFloat(localStorage.getItem("cartTotal") || "0"));
   }, []);
-
-  const openEditModal = (addr: any) => {
-    setEditAddress(addr);
-    setShowEditModal(true);
-  };
-
 
   // Load cart count
   useEffect(() => {
@@ -192,17 +190,32 @@ export default function CheckoutPage() {
     setCartItems(items);
   }, []);
 
+
   const addAddress = async () => {
+  const idStr = localStorage.getItem("userId");
+  const userId = idStr ? parseInt(idStr) : null;
+
+  if (!userId) {
+    console.log("add data",userId)
+    Swal.fire("Error", "Please login first", "error");
+    return;
+  }
+
     const payload = {
-      user_id: localStorage.getItem("userId"),
-      name: (document.getElementById("add-name") as any).value,
-      phone: (document.getElementById("add-phone") as any).value,
-      address: (document.getElementById("add-address") as any).value,
-      city: (document.getElementById("add-city") as any).value,
-      state: (document.getElementById("add-state") as any).value,
-      pincode: (document.getElementById("add-pincode") as any).value,
-      flat_no: (document.getElementById("flat_no") as any).value,
+      user_id: userId,
+      name: (document.getElementById("add-name") as any)?.value,
+      phone: (document.getElementById("add-phone") as any)?.value,
+      address: (document.getElementById("add-address") as any)?.value,
+      city: (document.getElementById("add-city") as any)?.value,
+      state: (document.getElementById("add-state") as any)?.value,
+      pincode: (document.getElementById("add-pincode") as any)?.value,
+      flat_no: (document.getElementById("flat_no") as any)?.value,
     };
+
+    if (!payload.name || !payload.phone) {
+      Swal.fire("Error", "Name and phone are required", "error");
+      return;
+    }
 
     const res = await fetch("/api/address", {
       method: "POST",
@@ -213,27 +226,11 @@ export default function CheckoutPage() {
     const data = await res.json();
 
     if (res.ok) {
-      Swal.fire({
-        icon: "success",
-        title: "Address Saved!",
-        text: "Your address has been added successfully.",
-        confirmButtonColor: "#3085d6",
-      });
-
-      setShowAddModal(false);
-      fetchAddresses();
+      Swal.fire("Success", "Address added successfully", "success");
     } else {
-      Swal.fire({
-        icon: "error",
-        title: "Failed!",
-        text: data?.error || "Something went wrong.",
-        confirmButtonColor: "#d33",
-      });
+      Swal.fire("Error", data.error || "Something went wrong", "error");
     }
   };
-
-
-
 
   const fetchAddresses = async () => {
     try {
@@ -427,6 +424,7 @@ export default function CheckoutPage() {
               Delivery Address
               <button
                 onClick={() => setShowAddModal(true)}
+                disabled={userId === null}
                 className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
               >
                 + Add New

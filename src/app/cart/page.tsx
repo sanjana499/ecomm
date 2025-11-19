@@ -396,9 +396,6 @@ export default function CartPage() {
                     </div>
                   )}
 
-
-
-
                   {/* Remove Button */}
                   <button
                     onClick={() => removeFromCart(item.id)}
@@ -414,7 +411,7 @@ export default function CartPage() {
 
               {/* 🗑️ Place Order button */}
 
-              <button
+              {/* <button
                 onClick={() => {
                   const userId = localStorage.getItem("userId");
 
@@ -442,7 +439,7 @@ export default function CartPage() {
                 className="mt-6 w-50 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg transition font-semibold"
               >
                 Proceed to Checkout
-              </button>
+              </button> */}
 
 
             </div>
@@ -467,7 +464,30 @@ export default function CartPage() {
           </div>
 
           <button
-            onClick={() => Swal.fire("Proceeding to Payment", "Redirecting...", "info")}
+           onClick={() => {
+                  const userId = localStorage.getItem("userId");
+
+                  if (!userId) {
+                    // 🛑 User not logged in → Show toast message
+                    Swal.fire({
+                      icon: "warning",
+                      title: "Please login first",
+                      text: "You must login before checkout!",
+                      timer: 1500,
+                      showConfirmButton: false,
+                    });
+
+                    // Redirect to login page after short delay
+                    setTimeout(() => {
+                      router.push("/login");
+                    }, 1200);
+
+                    return;
+                  }
+
+                  // 🟢 User is logged in → Allow checkout
+                  router.push("/checkout");
+                }}
             className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold"
           >
             Proceed to Checkout

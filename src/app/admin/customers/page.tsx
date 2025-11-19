@@ -12,22 +12,33 @@ export default function CustomersPage() {
 
     const pageSize = 10; // default rows per page
 
-    useEffect(() => {
-        fetch("/api/customers")
-            .then((res) => res.json())
-            .then((data) => setCustomers(data));
-    }, []);
+   useEffect(() => {
+    fetch("/api/customers")
+        .then((res) => res.json())
+        .then((data) => {
+            if (Array.isArray(data)) {
+                setCustomers(data);
+            } else {
+                setCustomers([]);  
+            }
+        })
+        .catch(() => setCustomers([]));
+}, []);
 
+
+    
     // -------------------------
     // FILTERED DATA
     // -------------------------
-    const filteredData = customers.filter((c) => {
+    const filteredData = Array.isArray(customers)
+    ? customers.filter((c) => {
         return (
             c.name?.toLowerCase().includes(search.toLowerCase()) ||
             c.email?.toLowerCase().includes(search.toLowerCase()) ||
             c.country?.toLowerCase().includes(search.toLowerCase())
         );
-    });
+    })
+    : [];
 
     // -------------------------
     // PAGINATION LOGIC

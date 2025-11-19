@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
 
-    const { name, email, password, country, state, city } = data;
+    const { name, email, password, country, state, city,phone_no } = data;
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -35,6 +35,8 @@ export async function POST(req: Request) {
       state,
       city,
       customerId,
+      phoneNo:phone_no,
+      
     });
 
     return NextResponse.json({ success: true, message: "User registered successfully" });
