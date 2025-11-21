@@ -412,9 +412,16 @@ export default function CartPage() {
             <span>Shipping</span>
             <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
           </div>
+
+          <div className="flex justify-between mt-3 text-gray-700">
+              <p>Platform Fee</p>
+              <p>₹{platformFee.toFixed(2)}</p>
+            </div>
+
+
           <div className="flex justify-between text-lg font-bold border-t pt-3 mt-3">
             <span>Total</span>
-            <span>₹{total.toFixed(2)}</span>
+            <span>₹{total}</span>
           </div>
 
           <button

@@ -82,7 +82,7 @@ export default function SuccessOrdersPage() {
             </div> */}
 
             {/* 🎉 Success Card */}
-            <div className="bg-white shadow-xl rounded-2xl p-8 mt-10 w-full max-w-xl text-center animate-[fadeInUp_0.6s_ease-out] border border-gray-200">
+            <div className="bg-white shadow-xl rounded-2xl p-8 mt-30 w-full max-w-xl text-center animate-[fadeInUp_0.6s_ease-out] border border-gray-200">
                 <div className="flex justify-center">
                     <div className="animate-[pop_0.4s_ease-out] bg-green-100 p-4 rounded-full">
                         <svg className="h-16 w-16 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

@@ -95,21 +95,19 @@ export default function ProductDetails() {
 
 
   const handleBuyNow = () => {
-    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
 
-    if (!token) {
+    if (!userId) {
       Swal.fire({
         icon: "warning",
         title: "Login Required",
         text: "Please login to continue.",
       });
 
-      router.push("/login");
-      return;
+      return router.push("/login");
     }
 
-    // User logged in → Go to checkout
-    router.push("/checkout");
+    router.push(`/checkout?product=${product.id}`);
   };
 
   //Login Show or Logged in link not show
@@ -264,7 +262,6 @@ export default function ProductDetails() {
               )}
             </div>
           )}
-
 
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <Menu className="w-6 h-6" />

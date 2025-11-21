@@ -6,7 +6,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { eq ,desc} from "drizzle-orm";
 
-const uploadsDir = path.join(process.cwd(), "public", "uploads");
+const uploadsDir = "/uploads"; 
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
 
@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
       imagePath = `/uploads/${filename}`;
     }
 
-   
     // 🧾 Extract form fields
     const title = formData.get("title") as string;
     const category_id = Number(formData.get("category_id"));
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
       : null; // ✅ must be string or null
     const description = formData.get("description") as string | null;
     const color = formData.get("color") as string | null;
-    const size = formData.get("size") as string | null;
+    const size = formData.get("size") as string | null; 
     const quantity = formData.get("quantity")
       ? Number(formData.get("quantity"))
       : 0;

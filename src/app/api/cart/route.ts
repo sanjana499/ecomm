@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   try {
     const userIdParam = new URL(request.url).searchParams.get("userId");
 
-    console.log("🔍 Received userId:", userIdParam);
+    // console.log("🔍 Received userId:", userIdParam);
 
     if (!userIdParam) {
       return NextResponse.json(

@@ -5,8 +5,10 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-react";
+import { cart } from "@/lib/schema";
 
 export default function PaymentPage() {
+
   const router = useRouter();
   const params = useSearchParams();
 
@@ -21,15 +23,23 @@ export default function PaymentPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [subtotal, setSubtotal] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [platformFee, setPlatformFee] = useState(0);
   const [total, setTotal] = useState(0);
   const [addressId, setAddressId] = useState<string | null>(null);
-
   const cartCount = cartItems.length;
+  const [cart, setCart] = useState<any[]>([]);
+
+
+  useEffect(() => {
+    const storedCart = localStorage.getItem("cartData");
+    if (storedCart) {
+      setCart(JSON.parse(storedCart));
+    }
+  }, []);
 
   // ---------------- READ PARAMS ----------------
   useEffect(() => {
@@ -63,6 +73,8 @@ export default function PaymentPage() {
     }
   }, []);
 
+  
+
   // ---------------- PLACE ORDER ----------------
   const placeOrder = async (method: string) => {
     if (!selectedAddress) {
@@ -81,11 +93,14 @@ export default function PaymentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: localStorage.getItem("userId"),
+          customer_id: localStorage.getItem("userId"),
           total_amount: total,
           items: cartItems,
           address_id: selectedAddress,
           payment_method: method,
           order_status: method === "cod" ? "success" : "pending",
+          shipping: shipping,
+          pincode: params.get("pincode"),
         }),
       });
 
@@ -308,7 +323,7 @@ export default function PaymentPage() {
 
             <div className="flex justify-between font-bold text-blue-700 text-xl">
               <p>Total</p>
-              <p>₹{total + platformFee}</p>
+              <p>₹{total}</p>
             </div>
           </div>
 

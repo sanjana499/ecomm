@@ -114,7 +114,7 @@ export const orders = mysqlTable("orders", {
   city: varchar("city", { length: 255 }),
   state: varchar("state", { length: 255 }),
   pincode: varchar("pincode", { length: 20 }),
-  shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
+  shipping: decimal("shipping", { precision: 10, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
   created_at: timestamp("created_at").defaultNow(),
 });

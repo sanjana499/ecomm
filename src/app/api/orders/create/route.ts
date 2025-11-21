@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       name: body.name,
 
       total_amount: total.toString(),
-      shipping_charge: body.shipping_charge ?? "0",
+      shipping: body.shipping ?? "0",
       discount: body.discount ?? "0",
 
       transaction_id: body.transaction_id ?? null,

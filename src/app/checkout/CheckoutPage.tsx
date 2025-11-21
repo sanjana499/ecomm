@@ -33,19 +33,21 @@ export default function CheckoutPage() {
   const [userId, setUserId] = useState<number | null>(null);
   const [cart, setCart] = useState<any[]>([]);
   const searchParams = useSearchParams();
+  const pincode = searchParams.get("pincode");
   const [addressId, setAddressId] = useState<string | null>(null);
   //Login Show or Logged in link not show
   const [user, setUser] = useState<{ id: string; name: string } | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [selectedPincode, setSelectedPincode] = useState<string | null>(null);
 
 
-  
+
   useEffect(() => {
     const userIdStr = localStorage.getItem("userId");
     setUserId(userIdStr ? parseInt(userIdStr) : null);
   }, []);
 
-  
+
 
   useEffect(() => {
     setSubtotal(parseFloat(localStorage.getItem("cartSubtotal") || "0"));
@@ -177,13 +179,13 @@ export default function CheckoutPage() {
     }
   }, [addresses]);
 
-  
-useEffect(() => {
-  const q = searchParams.get("addressId");
-  const stored = typeof window !== "undefined" ? localStorage.getItem("selectedAddressId") : null;
 
-  setAddressId(q || stored);
-}, [searchParams]);
+  useEffect(() => {
+    const q = searchParams.get("addressId");
+    const stored = typeof window !== "undefined" ? localStorage.getItem("selectedAddressId") : null;
+
+    setAddressId(q || stored);
+  }, [searchParams]);
 
 
   //Login Show or Logged in link not show
@@ -200,15 +202,16 @@ useEffect(() => {
       Swal.fire("Error", "Please select an address", "error");
       return;
     }
-  
+
     localStorage.setItem("selectedAddressId", String(selectedAddress));
-  
+
     router.push(
-      `/payment?subtotal=${subtotal}&shipping=${shipping}&platformFee=${platformFee}&total=${total}&addressId=${Number(selectedAddress)}`
+      `/payment?subtotal=${subtotal}&shipping=${shipping}&platformFee=${platformFee}
+      &total=${total}&addressId=${Number(selectedAddress)}&pincode=${selectedPincode}`
     );
   };
-  
-  
+
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       {/* ---------------- NAVBAR ---------------- */}
@@ -384,8 +387,12 @@ useEffect(() => {
                   type="checkbox"
                   checked={selectedAddress === addr.id}
                   onChange={() => {
-                    setSelectedAddress(Number(addr.id)); 
+                    setSelectedAddress(Number(addr.id));
                     localStorage.setItem("lastAddress", String(addr.id));
+
+                    // 👉 Yaha se pincode set karo
+                    setSelectedPincode(addr.pincode);
+                    localStorage.setItem("selectedPincode", addr.pincode);
                   }}
                   className="h-5 w-5 cursor-pointer"
                 />
@@ -418,6 +425,9 @@ useEffect(() => {
               <p>
                 {addr.city}, {addr.state} - {addr.pincode}
               </p>
+
+              <p>Your Pincode: {pincode}</p>
+
             </div>
           ))}
           <div className="flex justify-end mt-2">

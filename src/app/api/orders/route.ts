@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, users } from "@/lib/schema";
+import { addresses, orders, users } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function GET() {
   try {
     const rawData = await db
       .select({
+        
         id: orders.id,
         user_id: orders.user_id,
         total_amount: orders.total_amount,
-        shipping_charge: orders.shipping_charge,
+        shipping: orders.shipping,
         order_status: orders.order_status,
         created_at: orders.created_at,
 
@@ -21,6 +22,7 @@ export async function GET() {
         email: users.email,
       })
       .from(orders)
+      .leftJoin(addresses, eq(orders.address_id, addresses.id))
       .leftJoin(users, eq(orders.user_id, users.id))
       .orderBy(desc(orders.created_at));
 
@@ -66,7 +68,7 @@ console.log("body",body);
       email: body.email || "",
       name: body.name || "",
 
-      shipping_charge: body.shipping_charge || 0,
+      shipping: body.shipping || 0,
       discount: body.discount || 0,
       address_id: body.address_id || null,
       shipping_address: body.shipping_address || "",
