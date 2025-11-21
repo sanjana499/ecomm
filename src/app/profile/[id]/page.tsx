@@ -89,7 +89,7 @@ const ProfilePage = () => {
             <div className="max-w-7xl mx-auto flex gap-6">
 
                 {/* ================= Left Sidebar ================= */}
-                <aside className="w-64 flex-shrink-0">
+                <aside className="w-64 shrink-0">
 
                     {/* USER CARD (ONLY THIS HAS GAP) */}
                     <div className="bg-white rounded-lg shadow p-6 flex items-center gap-3 mb-3">

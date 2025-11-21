@@ -77,7 +77,7 @@ export const sub_categories = mysqlTable("sub_categories", {
 
 export const cart = mysqlTable("cart", {
   id: serial("id").primaryKey(),
-  userId: int("user_id").notNull(), // if you have user login
+  userId: int("user_id").notNull(), 
   productId: int("product_id").notNull(),
   quantity: int("quantity").default(1),
   createdAt: timestamp("created_at").defaultNow(),

@@ -6,16 +6,18 @@ import { eq, inArray } from "drizzle-orm";
 
 export async function POST(req: Request) {
   const userId = await getUserIdFromReq(req);
-  if (!userId)
+  if (!userId) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
     );
+  }
 
   const body = await req.json();
+
   let items: { productId: number; quantity: number }[] = body.items;
 
-  // If no items provided → use cart
+  // If items not provided → take items from cart
   if (!items || items.length === 0) {
     const cartRows = await db
       .select()
@@ -23,26 +25,31 @@ export async function POST(req: Request) {
       .where(eq(cart.userId, userId));
 
     items = cartRows.map((r: any) => ({
-      productId: r.product_id,
+      productId: r.productId, // cart.productId field correct
       quantity: r.quantity,
     }));
 
-    if (items.length === 0)
+    if (items.length === 0) {
       return NextResponse.json(
         { success: false, error: "Cart is empty" },
         { status: 400 }
       );
+    }
   }
 
   // Fetch product prices
   const productIds = items.map((i) => i.productId);
+
   const productsRows = await db
     .select()
     .from(products)
     .where(inArray(products.id, productIds));
 
   const itemsWithPrice = items.map((i) => {
-    const p = productsRows.find((x: any) => Number(x.id) === Number(i.productId));
+    const p = productsRows.find(
+      (x: any) => Number(x.id) === Number(i.productId)
+    );
+
     const price =
       p && p.offerPrice && Number(p.offerPrice) > 0
         ? Number(p.offerPrice)
@@ -51,49 +58,54 @@ export async function POST(req: Request) {
     return { ...i, price };
   });
 
-  const total = itemsWithPrice.reduce((s, it) => s + it.price * it.quantity, 0);
+  // Calculate total
+  const total = itemsWithPrice.reduce(
+    (sum, it) => sum + it.price * it.quantity,
+    0
+  );
 
-  // ✅ Insert into orders table and return auto-generated ID
+  // INSERT INTO ORDERS + get inserted ID
+  const [insertedOrder] = await db
+    .insert(orders)
+    .values({
+      user_id: userId,
 
-  const insertedOrder = await db.insert(orders).values({
-    user_id: userId,
-  
-    product_ids: JSON.stringify(itemsWithPrice.map(i => i.productId)),
-    quantities: JSON.stringify(itemsWithPrice.map(i => i.quantity)),
-  
-    customerId: body.customer_id,
-  
-    email: body.email,
-    name: body.name,  // ✅ FIXED — you are getting name from users table
-  
-    total_amount: total.toString(),
-    shipping_charge: body.shipping_charge ?? "0",
-    discount: body.discount ?? "0",
-  
-    transaction_id: body.transaction_id ?? null,
-    payment_method: body.payment_method ?? "online",
-    order_status: "pending",
-  
-    shipping_address: body.shipping_address,
-    city: body.city,
-    state: body.state,
-    pincode: body.pincode,
-  
-    address_id: body.address_id ?? 0,
-  
-    items: JSON.stringify(itemsWithPrice),
-  }).$returningId();
-  
+      // 👇 These 3 fields were not saving earlier — FIXED
+      product_ids: JSON.stringify(itemsWithPrice.map((i) => i.productId)),
+      quantities: JSON.stringify(itemsWithPrice.map((i) => i.quantity)),
+      items: JSON.stringify(itemsWithPrice),
 
-  const orderId = insertedOrder[0];
+      // User details
+      customerId: body.customer_id,
+      email: body.email,
+      name: body.name,
+
+      total_amount: total.toString(),
+      shipping_charge: body.shipping_charge ?? "0",
+      discount: body.discount ?? "0",
+
+      transaction_id: body.transaction_id ?? null,
+      payment_method: body.payment_method ?? "online",
+      order_status: "pending",
+
+      shipping_address: body.shipping_address,
+      city: body.city,
+      state: body.state,
+      pincode: body.pincode,
+      address_id: body.address_id ?? 0,
+    })
+    .$returningId();
+
+  const orderId = insertedOrder?.id || insertedOrder;
+
   if (!orderId) {
     return NextResponse.json(
-      { success: false, error: "Failed to create order" },
+      { success: false, error: "Order Insert Failed" },
       { status: 500 }
     );
   }
 
-  // Insert into order_items table
+  // Insert each order item
   await Promise.all(
     itemsWithPrice.map((it) =>
       db.insert(order_items).values({

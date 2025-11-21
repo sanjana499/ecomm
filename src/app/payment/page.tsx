@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import CheckoutPage from "./CheckoutPage";
+import PaymentPage from "./PaymentPage";
 
 export default function Wrapper() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CheckoutPage />
+      <PaymentPage />
     </Suspense>
   );
 }

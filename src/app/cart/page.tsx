@@ -18,8 +18,14 @@ export default function CartPage() {
   const router = useRouter();
   const [cartCount, setCartCount] = useState(0);
 
-  const [savedItems, setSavedItems] = useState<any[]>(() => {
-    // LocalStorage se saved items load karo
+
+  //Login Show or Logged in link not show
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+
+  const [,] = useState<any[]>(() => {
+
     if (typeof window !== "undefined") {
       return JSON.parse(localStorage.getItem("savedItems") || "[]");
     }
@@ -29,7 +35,8 @@ export default function CartPage() {
 
   const fetchCartCount = async () => {
     try {
-      const res = await fetch("/api/cart/count");
+      const userId = localStorage.getItem("userId");
+      const res = await fetch(`/api/cart/count?userId=${userId}`);
       const data = await res.json();
       setCartCount(data.count);
     } catch (error) {
@@ -50,8 +57,11 @@ export default function CartPage() {
 
   const fetchCart = async () => {
     try {
-      const res = await fetch("/api/cart");
+      const userId = localStorage.getItem("userId");
+      console.log("userId", userId);
+      const res = await fetch(`/api/cart?userId=${userId}`);
       const data = await res.json();
+
       if (res.ok) setCartItems(data.items);
     } catch (error) {
       Swal.fire("Error", "Failed to load cart items", "error");
@@ -63,6 +73,17 @@ export default function CartPage() {
   useEffect(() => {
     fetchCart();
   }, []);
+
+  // 1️⃣ Load cart items
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+
+    fetch(`/api/cart?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => setCartItems(data));
+  }, []);
+
 
   const updateQuantity = async (id: any, newQty: number) => {
     if (newQty < 1) return;
@@ -108,6 +129,13 @@ export default function CartPage() {
       );
   }, []);
 
+  //Login Show or Logged in link not show
+  useEffect(() => {
+    const storedId = localStorage.getItem("userId");
+    const storedName = localStorage.getItem("userName");
+    if (storedId && storedName) setUser({ id: storedId, name: storedName });
+  }, []);
+
 
   const removeFromCart = async (id: number) => {
     try {
@@ -151,77 +179,44 @@ export default function CartPage() {
   const total = subtotal + shipping + platformFee;
 
   // Save to localStorage so CheckoutPage can read it
-  // Save to localStorage so CheckoutPage can read it
   localStorage.setItem("cartSubtotal", subtotal.toFixed(2));
   localStorage.setItem("cartShipping", shipping.toFixed(2));
   localStorage.setItem("cartPlatformFee", platformFee.toFixed(2));
   localStorage.setItem("cartTotal", total.toFixed(2));
 
-  const handleMoveToCart = async (item: any) => {
-    await fetch(`/api/cart/move/${item.id}`, { method: "POST" });
-    fetchCart();
-  };
-
-
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100 p-6">
       {/* 🔹 Top Navbar */}
-      <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2">
-        <div className="flex items-center h-5">
-          <div className="relative w-[100px] h-[100px]">
-            {/* Optional logo */}
-          </div>
-          <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
-            ShopEase
-          </h1>
-        </div>
+      <nav className="w-full flex items-center justify-between border-b pb-2">
+        <h1 className="text-2xl font-bold">ShopEase</h1>
 
         <div className="hidden md:flex items-center gap-6 relative">
-          {["Home", "Contact"].map((item) => (
-            <a
-              key={item}
-              href="/"
-              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-            >
-              {item}
-            </a>
-          ))}
+          <a href="/" className="hover:text-blue-600">Home</a>
+          <a href="/contact" className="hover:text-blue-600">Contact</a>
 
-          {/* Category Dropdown */}
+          {/* Categories */}
           <div
-            className="relative z-50"
-            onMouseEnter={() => {
-              clearTimeout((window as any).dropdownTimer);
-              setOpenDropdown(true);
-            }}
+            className="relative"
+            onMouseEnter={() => setOpenDropdown(true)}
             onMouseLeave={() => {
-              (window as any).dropdownTimer = setTimeout(() => {
+              setTimeout(() => {
                 setOpenDropdown(false);
                 setActiveCategory(null);
-              }, 150);
+              }, 120);
             }}
           >
-            <button
-              className="flex items-center text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-              onClick={() => setOpenDropdown(!openDropdown)}
-            >
+            <button className="flex items-center hover:text-blue-600">
               Categories
-              <ChevronDown
-                className={`ml-1 h-4 w-4 transition-transform ${openDropdown ? "rotate-180" : ""
-                  }`}
-              />
+              <ChevronDown className={`ml-1 h-4 w-4 ${openDropdown ? "rotate-180" : ""}`} />
             </button>
 
             {openDropdown && (
-              <div className="absolute left-0 mt-2 flex bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 z-50">
-                {/* Left - main categories */}
-                <div className="w-44 border-r dark:border-zinc-700">
+              <div className="absolute left-0 mt-2 flex bg-white shadow-lg rounded-lg z-50">
+                <div className="w-44 border-r">
                   {categories.map((cat) => (
                     <div
                       key={cat.id}
-                      className={`flex justify-between items-center px-4 py-2 text-sm cursor-pointer ${activeCategory === cat.name
-                        ? "bg-blue-100 dark:bg-zinc-700 text-blue-700"
-                        : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-zinc-700"
+                      className={`px-4 py-2 flex justify-between cursor-pointer ${activeCategory === cat.name ? "bg-blue-100" : "hover:bg-blue-50"
                         }`}
                       onMouseEnter={() => setActiveCategory(cat.name)}
                     >
@@ -231,46 +226,37 @@ export default function CartPage() {
                   ))}
                 </div>
 
-                {/* Right - subcategories */}
                 {activeCategory && (
                   <div className="w-52">
                     {categories
-                      .find((cat) => cat.name === activeCategory)
+                      .find((c) => c.name === activeCategory)
                       ?.subcategories.map((sub: any) => (
                         <Link
                           key={sub.id}
-                          href={`/category/slippers/${sub.id}`} // ✅ correct dynamic route
-                          className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-700"
-                          onClick={() => setOpenDropdown(false)}
+                          href={`/category/${sub.id}`}
+                          className="block px-4 py-2 hover:bg-blue-100"
                         >
                           {sub.name}
                         </Link>
                       ))}
                   </div>
                 )}
-
               </div>
             )}
           </div>
 
-          <a
-            href="/login"
-            className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-          >
-            Login
-          </a>
-        </div>
+          {!user && (
+            <a
+              href="/login"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+            >
+              Login
+            </a>
+          )}        </div>
 
         <div className="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
-          />
-
           <button className="relative">
-            <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-
+            <ShoppingCart className="w-6 h-6" />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {cartCount}
@@ -278,31 +264,62 @@ export default function CartPage() {
             )}
           </button>
 
-          <button>
-            <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-          </button>
+          {/* Profile dropdown if logged in */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
+                  {user.name.charAt(0)}
+                </div>
+                <span className="text-zinc-700 dark:text-white font-medium text-sm">{user.name}</span>
+                <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+              </button>
 
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md 
+                  border dark:border-zinc-700 z-50 overflow-hidden">
+                  <a
+                    href={`/profile/${user.id}`} // path param
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    My Profile
+                  </a>
+
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("userId");
+                      localStorage.removeItem("userName");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                      Swal.fire("Success", "Logged out successfully", "success");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+
+          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <Menu className="w-6 h-6" />
           </button>
         </div>
       </nav>
 
-      {/* 🔹 Mobile Menu */}
+      {/* ---------------- Mobile Menu ---------------- */}
       {isMenuOpen && (
-        <div className="w-full flex flex-col mt-4 md:hidden border-t border-gray-200 dark:border-zinc-700 pt-3 space-y-3 px-6">
-          {["Home", "Men's", "Women's", "Contact"].map((item) => (
-            <a
-              key={item}
-              href="/"
-              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-            >
-              {item}
-            </a>
-          ))}
+        <div className="md:hidden flex flex-col mt-3 gap-3">
+          <a href="/" className="hover:text-blue-600">Home</a>
+          <a href="/contact" className="hover:text-blue-600">Contact</a>
+          <a href="/login" className="hover:text-blue-600">Login</a>
         </div>
       )}
 
@@ -368,34 +385,6 @@ export default function CartPage() {
                     </button>
                   </div>
 
-
-                  {/* ✅ Save for Later Button
-                  <button
-                    onClick={() => handleSaveForLater(item)}
-                    className="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 transition text-sm"
-                  >
-                    Save for Later
-                  </button> */}
-
-
-                  {/* Saved Items Section */}
-                  {/* {savedItems.length > 0 && (
-                    <div className="mt-6">
-                      <h2 className="text-lg font-semibold mb-2">Saved for Later</h2>
-                      {savedItems.map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-2 border mb-2 rounded">
-                          <span>{item.title}</span>
-                          <button
-                            onClick={() => handleMoveToCart(item)}
-                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                          >
-                            Move to Cart
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )} */}
-
                   {/* Remove Button */}
                   <button
                     onClick={() => removeFromCart(item.id)}
@@ -407,39 +396,6 @@ export default function CartPage() {
                 </div>
 
               </div>
-
-
-              {/* 🗑️ Place Order button */}
-
-              {/* <button
-                onClick={() => {
-                  const userId = localStorage.getItem("userId");
-
-                  if (!userId) {
-                    // 🛑 User not logged in → Show toast message
-                    Swal.fire({
-                      icon: "warning",
-                      title: "Please login first",
-                      text: "You must login before checkout!",
-                      timer: 1500,
-                      showConfirmButton: false,
-                    });
-
-                    // Redirect to login page after short delay
-                    setTimeout(() => {
-                      router.push("/login");
-                    }, 1200);
-
-                    return;
-                  }
-
-                  // 🟢 User is logged in → Allow checkout
-                  router.push("/checkout");
-                }}
-                className="mt-6 w-50 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg transition font-semibold"
-              >
-                Proceed to Checkout
-              </button> */}
             </div>
 
           ))}
@@ -462,33 +418,39 @@ export default function CartPage() {
           </div>
 
           <button
-           onClick={() => {
-                  const userId = localStorage.getItem("userId");
+            onClick={() => {
+              const userId = localStorage.getItem("userId");
 
-                  if (!userId) {
-                    Swal.fire({
-                      icon: "warning",
-                      title: "Please login first",
-                      text: "You must login before checkout!",
-                      timer: 1500,
-                      showConfirmButton: false,
-                    });
+              if (!userId) {
+                Swal.fire({
+                  icon: "warning",
+                  title: "Please login first",
+                  text: "You must login before checkout!",
+                  timer: 1500,
+                  showConfirmButton: false,
+                });
 
-                    // Redirect to login page after short delay
-                    setTimeout(() => {
-                      router.push("/login");
-                    }, 1200);
+                // Redirect to login page
+                setTimeout(() => {
+                  router.push("/login");
+                }, 1200);
 
-                    return;
-                  }
+                return;
+              }
 
-                  // 🟢 User is logged in → Allow checkout
-                  router.push("/checkout");
-                }}
+              // 🟢 1. Cart data ko localStorage me save karo
+              if (cartItems && cartItems.length > 0) {
+                localStorage.setItem("cartData", JSON.stringify(cartItems));
+              }
+
+              // 🟢 2. Redirect to checkout
+              router.push("/checkout");
+            }}
             className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition font-semibold"
           >
             Proceed to Checkout
           </button>
+
         </div>
       </div>
     </div>

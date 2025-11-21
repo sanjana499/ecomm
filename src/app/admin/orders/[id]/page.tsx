@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import Topbar from "@/app/components/Topbar";
-import { orders } from "@/lib/schema";
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -27,6 +26,8 @@ export default function OrderDetails() {
         setLoading(false);
       });
   }, [id]);
+
+  
 
   if (loading) return <div className="p-6 text-center text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;

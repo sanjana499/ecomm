@@ -4,21 +4,33 @@ import { cart } from "@/lib/schema";
 
 export async function POST(req: Request) {
   try {
-    const { userId, productId, quantity } = await req.json();
+    const body = await req.json();
+    console.log("CART ADD BODY =>", body);
 
-    if (!productId) {
-      return NextResponse.json({ error: "Product ID required" }, { status: 400 });
+    const { user_id, product_id, quantity } = body;
+
+    if (!user_id || !product_id) {
+      return NextResponse.json(
+        { error: "user_id and product_id are required" },
+        { status: 400 }
+      );
     }
 
-    await db.insert(cart).values({
-      userId: userId || 1, // temporary static user
-      productId,
-      quantity: quantity || 1,
+    const inserted = await db.insert(cart).values({
+      userId: Number(user_id),
+      productId: Number(product_id),
+      quantity: Number(quantity) || 1,
     });
 
-    return NextResponse.json({ success: true, message: "Added to cart" });
+    return NextResponse.json(
+      { success: true, message: "Added to cart", inserted },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error("❌ Error adding to cart:", error);
-    return NextResponse.json({ error: "Failed to add to cart" }, { status: 500 });
+    console.error("Cart Add Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to add to cart" },
+      { status: 500 }
+    );
   }
 }
