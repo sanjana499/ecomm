@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState, useEffect, Key } from "react";
 import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-react";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,12 +15,24 @@ export default function Home() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
-
+  const router = useRouter();
+  const [cartCount, setCartCount] = useState(0);
+  const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
   
+
 
   //Login Show or Logged in link not show
   const [user, setUser] = useState<{ id: string; name: string } | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+  
+    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
+    setCartCount(savedCart.length);
+  
+  }, [userId]);
+  
 
   useEffect(() => {
     fetch("/api/categories")
@@ -190,11 +204,18 @@ export default function Home() {
               className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
             />
 
-            <button className="relative">
+
+            <button
+              className="relative"
+              onClick={() => router.push("/cart")}
+            >
               <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                2
-              </span>
+
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  {cartCount}
+                </span>
+              )}
             </button>
 
             {/* Profile dropdown if logged in */}

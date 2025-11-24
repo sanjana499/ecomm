@@ -1,10 +1,11 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams ,useRouter} from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
-import { ShoppingCart, User, Menu ,ChevronDown, ChevronRight } from "lucide-react"; // ✅ ADDED ICON IMPORTS
+import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-react"; // ✅ ADDED ICON IMPORTS
 import Link from "next/link";
+
 
 export default function SlippersPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -14,7 +15,7 @@ export default function SlippersPage() {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
-
+  const router = useRouter();
   // 🔹 Selected Filter States
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -23,8 +24,24 @@ export default function SlippersPage() {
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 999999]);
-  const { id } = useParams(); 
+  const { id } = useParams();
   const subcategoryId = Number(id);
+  const [cartCount, setCartCount] = useState(0);
+
+  const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+
+  //Login Show or Logged in link not show
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+  
+    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
+    setCartCount(savedCart.length);
+  
+  }, [userId]);
+  
 
   useEffect(() => {
     if (!subcategoryId) return;
@@ -66,14 +83,14 @@ export default function SlippersPage() {
   //   fetchData();
   // }, []);
 
-    useEffect(() => {
-      fetch("/api/categories")
-        .then((res) => res.json())
-        .then((data) => setCategories(data))
-        .catch(() =>
-          Swal.fire("Error", "Failed to load categories", "error")
-        );
-    }, []);
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch(() =>
+        Swal.fire("Error", "Failed to load categories", "error")
+      );
+  }, []);
 
   // 🔹 Apply Filters
   const filteredProducts = useMemo(() => {
@@ -104,129 +121,192 @@ export default function SlippersPage() {
     selectedCategory,
   ]);
 
+  //Login Show or Logged in link not show
+  useEffect(() => {
+    const storedId = localStorage.getItem("userId");
+    const storedName = localStorage.getItem("userName");
+    if (storedId && storedName) setUser({ id: storedId, name: storedName });
+  }, []);
+
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       {/* 🔹 Navbar */}
       <nav className="w-full flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 pb-2">
-          <div className="flex items-center h-5">
-            <div className="relative w-[100px] h-[100px]">
-              {/* Optional logo */}
-            </div>
-            <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
-              ShopEase
-            </h1>
+        <div className="flex items-center h-5">
+          <div className="relative w-[100px] h-[100px]">
+            {/* Optional logo */}
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">
+            ShopEase
+          </h1>
+        </div>
+
+        <div className="hidden md:flex items-center gap-6 relative">
+          {["Home", "Contact"].map((item) => (
+            <a
+              key={item}
+              href="/"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+            >
+              {item}
+            </a>
+          ))}
+
+          {/* Category Dropdown */}
+          <div
+            className="relative z-50"
+            onMouseEnter={() => {
+              clearTimeout((window as any).dropdownTimer);
+              setOpenDropdown(true);
+            }}
+            onMouseLeave={() => {
+              (window as any).dropdownTimer = setTimeout(() => {
+                setOpenDropdown(false);
+                setActiveCategory(null);
+              }, 150);
+            }}
+          >
+            <button
+              className="flex items-center text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+              onClick={() => setOpenDropdown(!openDropdown)}
+            >
+              Categories
+              <ChevronDown
+                className={`ml-1 h-4 w-4 transition-transform ${openDropdown ? "rotate-180" : ""
+                  }`}
+              />
+            </button>
+
+            {openDropdown && (
+              <div className="absolute left-0 mt-2 flex bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 z-50">
+                {/* Left - main categories */}
+                <div className="w-44 border-r dark:border-zinc-700">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className={`flex justify-between items-center px-4 py-2 text-sm cursor-pointer ${activeCategory === cat.name
+                        ? "bg-blue-100 dark:bg-zinc-700 text-blue-700"
+                        : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-zinc-700"
+                        }`}
+                      onMouseEnter={() => setActiveCategory(cat.name)}
+                    >
+                      {cat.name}
+                      <ChevronRight className="h-4 w-4" />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right - subcategories */}
+                {activeCategory && (
+                  <div className="w-52">
+                    {categories
+                      .find((cat) => cat.name === activeCategory)
+                      ?.subcategories.map((sub: any) => (
+                        <Link
+                          key={sub.id}
+                          href={`/category/slippers/${sub.id}`} // ✅ correct dynamic route
+                          className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-700"
+                          onClick={() => setOpenDropdown(false)}
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                  </div>
+                )}
+
+              </div>
+            )}
           </div>
 
-          <div className="hidden md:flex items-center gap-6 relative">
-            {["Home", "Contact"].map((item) => (
-              <a
-                key={item}
-                href="/"
-                className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-              >
-                {item}
-              </a>
-            ))}
-
-            {/* Category Dropdown */}
-            <div
-              className="relative z-50"
-              onMouseEnter={() => {
-                clearTimeout((window as any).dropdownTimer);
-                setOpenDropdown(true);
-              }}
-              onMouseLeave={() => {
-                (window as any).dropdownTimer = setTimeout(() => {
-                  setOpenDropdown(false);
-                  setActiveCategory(null);
-                }, 150);
-              }}
-            >
-              <button
-                className="flex items-center text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
-                onClick={() => setOpenDropdown(!openDropdown)}
-              >
-                Categories
-                <ChevronDown
-                  className={`ml-1 h-4 w-4 transition-transform ${openDropdown ? "rotate-180" : ""
-                    }`}
-                />
-              </button>
-
-              {openDropdown && (
-                <div className="absolute left-0 mt-2 flex bg-white dark:bg-zinc-800 rounded-lg shadow-lg border dark:border-zinc-700 z-50">
-                  {/* Left - main categories */}
-                  <div className="w-44 border-r dark:border-zinc-700">
-                    {categories.map((cat) => (
-                      <div
-                        key={cat.id}
-                        className={`flex justify-between items-center px-4 py-2 text-sm cursor-pointer ${activeCategory === cat.name
-                          ? "bg-blue-100 dark:bg-zinc-700 text-blue-700"
-                          : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-zinc-700"
-                          }`}
-                        onMouseEnter={() => setActiveCategory(cat.name)}
-                      >
-                        {cat.name}
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Right - subcategories */}
-                  {activeCategory && (
-                    <div className="w-52">
-                      {categories
-                        .find((cat) => cat.name === activeCategory)
-                        ?.subcategories.map((sub: any) => (
-                          <Link
-                            key={sub.id}
-                            href={`/category/slippers/${sub.id}`} // ✅ correct dynamic route
-                            className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-700"
-                            onClick={() => setOpenDropdown(false)}
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                    </div>
-                  )}
-
-                </div>
-              )}
-            </div>
-
+          {!user && (
             <a
               href="/login"
               className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
             >
               Login
             </a>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
-            />
+        <div className="flex items-center gap-4">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
+          />
 
-            <button className="relative">
-              <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+<button
+            className="relative"
+            onClick={() => router.push("/cart")}
+          >
+            <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+
+            {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                2
+                {cartCount}
               </span>
-            </button>
-            <button>
-              <User className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-            </button>
+            )}
+          </button>
+          {/* Profile dropdown if logged in */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
+                  {user.name.charAt(0)}
+                </div>
+                <span className="text-zinc-700 dark:text-white font-medium text-sm">{user.name}</span>
+                <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+              </button>
 
-            <button
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
-            </button>
-          </div>
-        </nav>
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
+                  {/* My Profile link */}
+                  {/* <a
+                      href={`/profile?userId=${user.id}`} // GET parameter se user id pass karenge
+                      className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      My Profile
+                    </a> */}
+
+                  <a
+                    href={`/profile/${user.id}`} // path param
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    My Profile
+                  </a>
+
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("userId");
+                      localStorage.removeItem("userName");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                      Swal.fire("Success", "Logged out successfully", "success");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <Menu className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+          </button>
+        </div>
+      </nav>
 
       {/* ✅ Mobile Menu */}
       {isMenuOpen && (

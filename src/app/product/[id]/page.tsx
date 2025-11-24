@@ -49,51 +49,73 @@ export default function ProductDetails() {
     if (id) fetchProduct();
   }, [id]);
 
-  // 🔹 Add to Cart
-  const addToCart = async () => {
-    if (!selectedSize) return;
 
+  // 🔹 Add to Cart
+  const addToCart = async (product: { productId: number; quantity: number }) => {
     try {
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        Swal.fire("Login Required", "Please login first", "warning");
+        return;
+      }
+
       const res = await fetch("/api/cart/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId: product.id,
-          quantity: 1,
-          size: selectedSize,
+          user_id: Number(userId),
+          product_id: Number(product.productId),
+          quantity: Number(product.quantity) || 1,
         }),
       });
 
       const data = await res.json();
+      console.log("ADD CART RESPONSE =>", data);
 
       if (data.success) {
         setAddedQty(addedQty + 1);
         setCartCount(cartCount + 1);
+
+        Swal.fire({
+          icon: "success",
+          title: "Added to cart!",
+          showConfirmButton: false,
+          timer: 1200,
+        });
+
         router.push("/cart");
       }
     } catch (err) {
-      console.error(err);
+      console.error("ADD CART ERROR =>", err);
+      Swal.fire("Error", "Something went wrong", "error");
     }
   };
 
 
-  const handleBuyNow = () => {
-    const token = localStorage.getItem("token");
 
-    if (!token) {
+  const handleBuyNow = () => {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
       Swal.fire({
         icon: "warning",
         title: "Login Required",
         text: "Please login to continue.",
       });
 
-      router.push("/login");
-      return;
+      return router.push("/login");
     }
 
-    // User logged in → Go to checkout
-    router.push("/checkout");
+    router.push(`/checkout?product=${product.id}`);
   };
+
+  //Login Show or Logged in link not show
+  useEffect(() => {
+    const storedId = localStorage.getItem("userId");
+    const storedName = localStorage.getItem("userName");
+    if (storedId && storedName) setUser({ id: storedId, name: storedName });
+  }, []);
 
 
   if (loading)
@@ -102,47 +124,50 @@ export default function ProductDetails() {
   if (!product)
     return <p className="text-center mt-10 text-gray-500">Product not found.</p>;
 
+
+
   return (
-    <div>
-      {/* 🔹 NAVBAR */}
+    <div className="min-h-screen bg-gray-100 p-6">
+
       <nav className="w-full flex items-center justify-between border-b pb-2">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold">ShopEase</h1>
-        </div>
+        <h1 className="text-2xl font-bold">ShopEase</h1>
 
-        <div className="hidden md:flex gap-6 relative">
-          <Link href="/">Home</Link>
-          <Link href="/">Contact</Link>
+        <div className="hidden md:flex items-center gap-6 relative">
+          <a href="/" className="hover:text-blue-600">Home</a>
+          <a href="/contact" className="hover:text-blue-600">Contact</a>
 
-          {/* Categories Dropdown */}
+          {/* Categories */}
           <div
             className="relative"
             onMouseEnter={() => setOpenDropdown(true)}
             onMouseLeave={() => {
-              setTimeout(() => setOpenDropdown(false), 150);
+              setTimeout(() => {
+                setOpenDropdown(false);
+                setActiveCategory(null);
+              }, 120);
             }}
           >
-            <button className="flex items-center">
-              Categories <ChevronDown className="ml-1 h-4 w-4" />
+            <button className="flex items-center hover:text-blue-600">
+              Categories
+              <ChevronDown className={`ml-1 h-4 w-4 ${openDropdown ? "rotate-180" : ""}`} />
             </button>
 
             {openDropdown && (
-              <div className="absolute left-0 mt-2 flex bg-white shadow-lg rounded-lg border z-50">
-                {/* Left side */}
+              <div className="absolute left-0 mt-2 flex bg-white shadow-lg rounded-lg z-50">
                 <div className="w-44 border-r">
                   {categories.map((cat) => (
                     <div
                       key={cat.id}
-                      className={`px-4 py-2 text-sm cursor-pointer flex justify-between
-                      ${activeCategory === cat.name ? "bg-blue-100" : "hover:bg-blue-50"}`}
+                      className={`px-4 py-2 flex justify-between cursor-pointer ${activeCategory === cat.name ? "bg-blue-100" : "hover:bg-blue-50"
+                        }`}
                       onMouseEnter={() => setActiveCategory(cat.name)}
                     >
-                      {cat.name} <ChevronRight className="h-4 w-4" />
+                      {cat.name}
+                      <ChevronRight className="h-4 w-4" />
                     </div>
                   ))}
                 </div>
 
-                {/* Right side */}
                 {activeCategory && (
                   <div className="w-52">
                     {categories
@@ -150,9 +175,8 @@ export default function ProductDetails() {
                       ?.subcategories.map((sub: any) => (
                         <Link
                           key={sub.id}
-                          href={`/category/slippers/${sub.id}`}
-                          className="block px-4 py-2 text-sm hover:bg-blue-100"
-                          onClick={() => setOpenDropdown(false)}
+                          href={`/category/${sub.id}`}
+                          className="block px-4 py-2 hover:bg-blue-100"
                         >
                           {sub.name}
                         </Link>
@@ -163,76 +187,97 @@ export default function ProductDetails() {
             )}
           </div>
 
-          <Link href="/login">Login</Link>
+          {!user && (
+            <a
+              href="/login"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-blue-600"
+            >
+              Login
+            </a>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
-          <button onClick={() => router.push("/cart")} className="relative">
-            <ShoppingCart className="w-6 h-6" />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">
-              {cartCount}
-            </span>
+          <button
+            className="relative"
+            onClick={() => router.push("/cart")}
+          >
+            <ShoppingCart className="w-6 h-6 text-zinc-700 dark:text-zinc-200" />
+
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                {cartCount}
+              </span>
+            )}
           </button>
 
-{user && (
-              <div className="relative">
-                {/* Profile Button */}
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
-                >
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
-                    {user.name.charAt(0)}
-                  </div>
 
-                  {/* Username */}
-                  <span className="text-zinc-700 dark:text-white font-medium text-sm">
-                    {user.name}
-                  </span>
+          {/* Profile dropdown if logged in */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-md hover:shadow-lg transition relative"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm uppercase">
+                  {user.name.charAt(0)}
+                </div>
+                <span className="text-zinc-700 dark:text-white font-medium text-sm">{user.name}</span>
+                <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+              </button>
 
-                  {/* Dropdown arrow */}
-                  <ChevronDown
-                    className={`ml-1 h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""
-                      }`}
-                  />
-                </button>
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
+                  {/* My Profile link */}
+                  {/* <a
+                               href={`/profile?userId=${user.id}`} // GET parameter se user id pass karenge
+                               className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                               onClick={() => setIsUserMenuOpen(false)}
+                             >
+                               My Profile
+                             </a> */}
 
-                {/* Dropdown */}
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
-                    <div className="py-1">
-                      {/* My Profile - upar */}
-                      <Link
-                        href="/profile"
-                        className="w-full block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
-                      >
-                        My Profile
-                      </Link>
+                  <a
+                    href={`/profile/${user.id}`} // path param
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    My Profile
+                  </a>
 
-                      {/* Logout - niche */}
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem("userId");
-                          localStorage.removeItem("userName");
-                          setUser(null);
-                          setIsUserMenuOpen(false);
-                          Swal.fire("Success", "Logged out successfully", "success");
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("userId");
+                      localStorage.removeItem("userName");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                      Swal.fire("Success", "Logged out successfully", "success");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <Menu className="w-6 h-6" />
           </button>
         </div>
       </nav>
+
+      {/* ---------------- Mobile Menu ---------------- */}
+      {isMenuOpen && (
+        <div className="md:hidden flex flex-col mt-3 gap-3">
+          <a href="/" className="hover:text-blue-600">Home</a>
+          <a href="/contact" className="hover:text-blue-600">Contact</a>
+          <a href="/login" className="hover:text-blue-600">Login</a>
+        </div>
+      )}
+
 
       {/* 🔹 PRODUCT DETAILS */}
       <div className="p-6 bg-gray-100 min-h-screen">
@@ -287,15 +332,21 @@ export default function ProductDetails() {
             {/* Buttons */}
             <div className="mt-5 flex gap-3">
               <button
-                onClick={addToCart}
+                onClick={() =>
+                  addToCart({
+                    productId: product.id,
+                    quantity: 1,
+                  })
+                }
                 disabled={!selectedSize}
                 className={`w-32 py-2 rounded-md ${!selectedSize
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
               >
                 🛒 Add to Cart
               </button>
+
 
               <button
                 onClick={handleBuyNow}

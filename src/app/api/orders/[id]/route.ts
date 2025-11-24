@@ -29,7 +29,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
     transaction_id: orders.transaction_id,
     total_amount: orders.total_amount,
-    shipping_charge: orders.shipping_charge,
+    shipping: orders.shipping,
     discount: orders.discount,
     order_status: orders.order_status,
     payment_method: orders.payment_method,

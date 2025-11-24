@@ -77,7 +77,7 @@ export const sub_categories = mysqlTable("sub_categories", {
 
 export const cart = mysqlTable("cart", {
   id: serial("id").primaryKey(),
-  userId: int("user_id").notNull(), // if you have user login
+  userId: int("user_id").notNull(), 
   productId: int("product_id").notNull(),
   quantity: int("quantity").default(1),
   createdAt: timestamp("created_at").defaultNow(),
@@ -114,7 +114,7 @@ export const orders = mysqlTable("orders", {
   city: varchar("city", { length: 255 }),
   state: varchar("state", { length: 255 }),
   pincode: varchar("pincode", { length: 20 }),
-  shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
+  shipping: decimal("shipping", { precision: 10, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
   created_at: timestamp("created_at").defaultNow(),
 });
