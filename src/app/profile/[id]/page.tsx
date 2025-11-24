@@ -164,46 +164,97 @@ const ProfilePage = () => {
         Swal.fire({
             title: 'Delete Your Account?',
             html: `
-            <div class="text-left text-sm space-y-2">
-                <p>There are no pending transactions. If there are, complete them first.</p>
-                <p>Deleting account is permanent. You will lose order history, saved addresses, payment methods, wishlists, etc.</p>
-                <p>You will forfeit Gift Cards / SuperCoin balances.</p>
-                <p>Platform may retain certain data for legal compliance and security.</p>
-                <p>After deletion, logging in with same email/phone creates a new account.</p>
-                <hr class="my-2">
-                <p>I have read and agreed to the Terms and Conditions.</p>
-                <input type="checkbox" id="swal-terms" class="mr-2"> I agree<br>
-                <p>I acknowledge I have no Gift Card / SuperCoin balance or willing to forfeit</p>
-                <input type="checkbox" id="swal-balance" class="mr-2"> I acknowledge<br>
-                <p>I acknowledge I cannot return/replace past orders</p>
-                <input type="checkbox" id="swal-orders" class="mr-2"> I acknowledge<br>
-                <p>Please tell us why you’re leaving:</p>
-                <textarea id="swal-feedback" class="swal2-textarea" placeholder="Your feedback..."></textarea>
+        <div class="text-left text-sm space-y-3 p-4">
+            <p>There are no pending transactions. If there are, complete them first.</p>
+            <p>Deleting account is permanent. You will lose order history, saved addresses, wishlists, etc.</p>
+            <p>You will forfeit Gift Cards / SuperCoin balances.</p>
+            <p>Platform may retain some data for legal compliance.</p>
+            <p>After deletion, logging in creates a new account.</p>
+             <!-- Flipkart-style Yellow Warning Box -->
+    <div class="bg-yellow-100 border border-yellow-300 p-3 rounded-md text-sm text-gray-800 mb-4">
+      <strong>Deleting account is a permanent action</strong><br />
+      Please be advised that the deletion of your account is a permanent action.
+      Once your account is deleted, you will lose Flipkart and Shopsy data including
+      order history & it will no longer be accessible and cannot be restored under any circumstances.
+    </div>
+            <hr class="my-2">
+
+            <p><b>I have read and agreed to the Terms and Conditions.</b></p>
+            <input type="checkbox" id="swal-terms" class="mr-2"> I agree<br>
+
+            <p><b>I have no gift card/supercoin balance or am willing to forfeit.</b></p>
+            <input type="checkbox" id="swal-balance" class="mr-2"> I acknowledge<br>
+
+            <p><b>I acknowledge I cannot return/replace past orders.</b></p>
+            <input type="checkbox" id="swal-orders" class="mr-2"> I acknowledge<br>
+
+            <p>Please tell us why you're leaving:</p>
+            <textarea id="swal-feedback"
+                class="w-full p-2 border rounded resize-none h-28"
+                placeholder="Your feedback..."></textarea>
+
+            <div class="flex gap-3 mt-3">
+                <button id="swal-delete-btn"
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    DELETE ACCOUNT
+                </button>
+
+                <button id="swal-cancel-btn"
+                    class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+                    CANCEL
+                </button>
             </div>
+        </div>
         `,
             icon: 'error',
-            showCancelButton: true,
-            confirmButtonText: 'DELETE ACCOUNT',
-            cancelButtonText: 'CANCEL',
-            reverseButtons: true,
-            focusCancel: true,
-            preConfirm: () => {
-                const terms = (Swal.getPopup()?.querySelector('#swal-terms') as HTMLInputElement).checked;
-                const balance = (Swal.getPopup()?.querySelector('#swal-balance') as HTMLInputElement).checked;
-                const orders = (Swal.getPopup()?.querySelector('#swal-orders') as HTMLInputElement).checked;
-                if (!terms || !balance || !orders) {
-                    Swal.showValidationMessage('Please acknowledge all required points');
-                }
-                const feedback = (Swal.getPopup()?.querySelector('#swal-feedback') as HTMLTextAreaElement).value;
-                return { terms, balance, orders, feedback };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Call API to delete account
-                Swal.fire('Deleted!', 'Your account has been permanently deleted.', 'success');
+            width: "90%",
+            padding: "0",
+            grow: "fullscreen",
+            showConfirmButton: false,
+            showCancelButton: false,
+
+            didOpen: () => {
+                const popup = Swal.getPopup();
+                if (!popup) return; // <-- TS error fixed (null safe)
+
+                popup.style.position = "relative";
+
+                // CREATE CLOSE BUTTON
+                const closeBtn = document.createElement("button");
+                closeBtn.innerHTML = "✖";
+                closeBtn.className =
+                    "absolute top-3 right-3 text-2xl font-bold text-gray-700 hover:text-black";
+                closeBtn.style.zIndex = "9999";
+                popup.appendChild(closeBtn);
+
+                closeBtn.addEventListener("click", () => Swal.close());
+
+                // DELETE BUTTON
+                const deleteBtn = popup.querySelector('#swal-delete-btn') as HTMLButtonElement | null;
+                const cancelBtn = popup.querySelector('#swal-cancel-btn') as HTMLButtonElement | null;
+
+                deleteBtn?.addEventListener("click", () => {
+                    const terms = (popup.querySelector('#swal-terms') as HTMLInputElement | null)?.checked;
+                    const balance = (popup.querySelector('#swal-balance') as HTMLInputElement | null)?.checked;
+                    const orders = (popup.querySelector('#swal-orders') as HTMLInputElement | null)?.checked;
+
+                    if (!terms || !balance || !orders) {
+                        Swal.showValidationMessage("Please acknowledge all required points");
+                        return;
+                    }
+
+                    Swal.close();
+                    Swal.fire("Deleted!", "Your account has been permanently deleted.", "success");
+                });
+
+                cancelBtn?.addEventListener("click", () => Swal.close());
             }
         });
     };
+
+
+
+
 
 
 
