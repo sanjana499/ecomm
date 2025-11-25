@@ -59,9 +59,9 @@ export const categories = mysqlTable("categories", {
   description: text("description"),
   status: boolean("status").notNull().default(true).$type<boolean>(),
   image: varchar("image", { length: 500 }),
-  createdAt: timestamp("created_at").defaultNow(),     
-  updatedAt: timestamp("updated_at").onUpdateNow().defaultNow(), 
-  deletedAt: timestamp("deleted_at"),                    
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const sub_categories = mysqlTable("sub_categories", {
@@ -77,7 +77,7 @@ export const sub_categories = mysqlTable("sub_categories", {
 
 export const cart = mysqlTable("cart", {
   id: serial("id").primaryKey(),
-  userId: int("user_id").notNull(), 
+  userId: int("user_id").notNull(),
   productId: int("product_id").notNull(),
   quantity: int("quantity").default(1),
   createdAt: timestamp("created_at").defaultNow(),
@@ -107,14 +107,14 @@ export const orders = mysqlTable("orders", {
   order_status: varchar("order_status", { length: 50 }).default("pending"),
   payment_method: varchar("payment_method", { length: 50 }).default("cod"),
   product_ids: text("product_ids").notNull(),
-  quantities: text("quantities").notNull(), 
+  quantities: text("quantities").notNull(),
   items: text("items").notNull(),
   address_id: int("address_id"),
   shipping_address: text("shipping_address"),
   city: varchar("city", { length: 255 }),
   state: varchar("state", { length: 255 }),
   pincode: varchar("pincode", { length: 20 }),
-  shipping: decimal("shipping", { precision: 10, scale: 2 }).default("0"),
+  shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
   created_at: timestamp("created_at").defaultNow(),
 });
@@ -123,8 +123,11 @@ export const order_items = mysqlTable("order_items", {
   id: serial("id").primaryKey(),
   order_id: int("order_id").notNull(),
   product_id: int("product_id").notNull(),
+  //price: decimal("price", { precision: 12, scale: 2 }).notNull(),
   price: decimal("price", { precision: 12, scale: 2 }).notNull(),
   quantity: int("quantity").notNull(),
+  //total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
 });
 
 

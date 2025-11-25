@@ -430,6 +430,14 @@ const ProfilePage = () => {
                                 Your Gender
                             </label>
 
+                            {/* Edit Button */}
+                            <button
+                                onClick={() => handleEditClick("gender")}
+                                className="absolute top-0 right-0 px-2 py-1 text-blue-500 text-sm"
+                            >
+                                Edit
+                            </button>
+
                             <div className="flex gap-6 mt-2">
                                 {["Male", "Female"].map((g) => (
                                     <label

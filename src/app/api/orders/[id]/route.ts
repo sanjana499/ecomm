@@ -13,38 +13,38 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   try {
     const result = await db
-  .select({
-    order_id: orders.id,
-    user_id: orders.user_id,
+      .select({
+        order_id: orders.id,
+        user_id: orders.user_id,
 
-    user_name: users.name,
-    email: users.email,
+        user_name: users.name,
+        email: users.email,
 
-    // ✔ users table se correct customer_id
-    customer_id: users.customerId,
+        // ✔ users table se correct customer_id
+        customer_id: users.customerId,
 
-    // ✔ users table se city, state
-    city: users.city,
-    state: users.state,
+        // ✔ users table se city, state
+        city: users.city,
+        state: users.state,
 
-    transaction_id: orders.transaction_id,
-    total_amount: orders.total_amount,
-    shipping: orders.shipping,
-    discount: orders.discount,
-    order_status: orders.order_status,
-    payment_method: orders.payment_method,
-    address_id: orders.address_id,
-    shipping_address: orders.shipping_address,
-    pincode: orders.pincode,
-    created_at: orders.created_at,
+        transaction_id: orders.transaction_id,
+        total_amount: orders.total_amount,
+        shipping_charge: orders.shipping_charge,
+        discount: orders.discount,
+        order_status: orders.order_status,
+        payment_method: orders.payment_method,
+        address_id: orders.address_id,
+        shipping_address: orders.shipping_address,
+        pincode: orders.pincode,
+        created_at: orders.created_at,
 
-    product_ids: orders.product_ids,
-    quantities: orders.quantities,
-    items: orders.items,
-  })
-  .from(orders)
-  .leftJoin(users, eq(orders.user_id, users.id))
-  .where(eq(orders.id, orderId));
+        product_ids: orders.product_ids,
+        quantities: orders.quantities,
+        items: orders.items,
+      })
+      .from(orders)
+      .leftJoin(users, eq(orders.user_id, users.id))
+      .where(eq(orders.id, orderId));
 
 
     if (!result.length) {
@@ -56,16 +56,23 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     return NextResponse.json({
       ...order,
       items: JSON.parse(order.items ?? "[]"),
-    
+
+      // product_ids: order.product_ids
+      //   ? String(order.product_ids).split(",")
+      //   : [],
+
       product_ids: order.product_ids
-        ? String(order.product_ids).split(",")
+        ? String(order.product_ids).split(",").map(Number)
         : [],
-    
+
+
       quantities: order.quantities
         ? String(order.quantities).split(",").map(Number)
         : [],
+
+      //quantities: order.quantities ? JSON.parse(order.quantities) : [],
     });
-    
+
 
   } catch (err) {
     console.error("API Error:", err);

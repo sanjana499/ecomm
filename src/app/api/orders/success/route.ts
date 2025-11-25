@@ -22,7 +22,16 @@ export async function GET() {
       .where(eq(orders.order_status, "success"))
       .orderBy(orders.id);
 
-    return NextResponse.json({ success: true, orders: data });
+    // Parse JSON fields
+    const parsedData = data.map((order: any) => ({
+      ...order,
+      items: JSON.parse(order.items ?? "[]"),
+      product_ids: order.product_ids ? JSON.parse(order.product_ids) : [],
+      quantities: order.quantities ? JSON.parse(order.quantities) : [],
+    }));
+
+    return NextResponse.json({ success: true, orders: parsedData });
+    //return NextResponse.json({ success: true, orders: data });
   } catch (error) {
     console.error("Success orders error:", error);
     return NextResponse.json(

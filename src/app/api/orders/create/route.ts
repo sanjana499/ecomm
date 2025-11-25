@@ -6,6 +6,7 @@ import { eq, inArray } from "drizzle-orm";
 
 export async function POST(req: Request) {
   const userId = await getUserIdFromReq(req);
+
   if (!userId) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
 
   let items: { productId: number; quantity: number }[] = body.items;
 
-  // If items not provided → take items from cart
+  // If no items sent -> load from CART
   if (!items || items.length === 0) {
     const cartRows = await db
       .select()
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
       .where(eq(cart.userId, userId));
 
     items = cartRows.map((r: any) => ({
-      productId: r.productId, // cart.productId field correct
+      productId: r.productId,
       quantity: r.quantity,
     }));
 
@@ -58,30 +59,28 @@ export async function POST(req: Request) {
     return { ...i, price };
   });
 
-  // Calculate total
+  // Calculate total amount
   const total = itemsWithPrice.reduce(
     (sum, it) => sum + it.price * it.quantity,
     0
   );
 
-  // INSERT INTO ORDERS + get inserted ID
+  // Insert order → get orderId
   const [insertedOrder] = await db
     .insert(orders)
     .values({
       user_id: userId,
 
-      // 👇 These 3 fields were not saving earlier — FIXED
       product_ids: JSON.stringify(itemsWithPrice.map((i) => i.productId)),
       quantities: JSON.stringify(itemsWithPrice.map((i) => i.quantity)),
       items: JSON.stringify(itemsWithPrice),
 
-      // User details
       customerId: body.customer_id,
       email: body.email,
       name: body.name,
 
       total_amount: total.toString(),
-      shipping: body.shipping ?? "0",
+      shipping_charge: body.shipping_charge ?? "0",
       discount: body.discount ?? "0",
 
       transaction_id: body.transaction_id ?? null,
@@ -105,20 +104,29 @@ export async function POST(req: Request) {
     );
   }
 
-  // Insert each order item
+  // Insert each item in order_items
   await Promise.all(
-    itemsWithPrice.map((it) =>
-      db.insert(order_items).values({
+    itemsWithPrice.map((it) => {
+      const totalPriceString = (it.price * it.quantity).toFixed(2);
+
+      return db.insert(order_items).values({
         order_id: Number(orderId),
         product_id: Number(it.productId),
-        price: it.price.toString(),
+
+        // DECIMAL FIELDS → MUST BE STRING
+        price: Number(it.price).toFixed(2),
         quantity: Number(it.quantity),
-      })
-    )
+        total_price: totalPriceString,
+      });
+    })
   );
 
   // Clear cart
   await db.delete(cart).where(eq(cart.userId, userId));
 
-  return NextResponse.json({ success: true, orderId });
+  return NextResponse.json({
+    success: true,
+    message: "Order Created Successfully",
+    orderId,
+  });
 }

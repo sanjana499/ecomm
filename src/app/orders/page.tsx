@@ -11,12 +11,23 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const router = useRouter();
 
+  // useEffect(() => {
+  //   fetch("/api/orders")
+  //     .then((r) => r.json())
+  //     .then((data) => setOrders(data))
+  //     .catch(() => setOrders([]));
+  // }, []);
+
   useEffect(() => {
-    fetch("/api/orders")
-      .then((r) => r.json())
-      .then((data) => setOrders(data))
-      .catch(() => setOrders([]));
-  }, []);
+  fetch("/api/orders")
+    .then((r) => r.json())
+    .then((data) => {
+      // If API returns { success: true, orders: [...] }
+      setOrders(data.orders ?? []);
+    })
+    .catch(() => setOrders([]));
+}, []);
+
 
   const handleDelete = (id: number) => {
   // Show confirmation dialog

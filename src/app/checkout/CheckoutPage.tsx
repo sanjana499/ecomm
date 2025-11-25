@@ -56,15 +56,43 @@ export default function CheckoutPage() {
     setTotal(parseFloat(localStorage.getItem("cartTotal") || "0"));
   }, []);
 
+  // useEffect(() => {
+  //   async function loadCart() {
+  //     try {
+  //       //const res = await fetch("/api/cart");
+
+  //       const uid = localStorage.getItem("userId");
+  //       if (!uid) return; // user nahi login to skip kar do
+
+  //       const res = await fetch(`/api/cart?userId=${uid}`);
+  //       const data = await res.json();
+
+  //       if (data.items) {
+  //         const totalItems = data.items.reduce(
+  //           (sum: number, item: any) => sum + (item.quantity || 1),
+  //           0
+  //         );
+  //         setCartCount(totalItems);
+  //       }
+  //     } catch (e) {
+  //       console.error("Failed to load cart count:", e);
+  //     }
+  //   }
+
+  //   loadCart();
+  // }, []);
   useEffect(() => {
     async function loadCart() {
       try {
-        const res = await fetch("/api/cart");
+        const uid = localStorage.getItem("userId");
+        if (!uid) return;
+
+        const res = await fetch(`/api/cart?userId=${uid}`);
         const data = await res.json();
 
         if (data.items) {
           const totalItems = data.items.reduce(
-            (sum: number, item: any) => sum + (item.quantity || 1),
+              (sum: number, item: { quantity: number }) => sum + (item.quantity || 1),
             0
           );
           setCartCount(totalItems);

@@ -73,10 +73,15 @@ export default function PaymentPage() {
     }
   }, []);
 
-  
+
 
   // ---------------- PLACE ORDER ----------------
   const placeOrder = async (method: string) => {
+
+    const selectedAddrData = await fetch(`/api/address/${selectedAddress}`).then(res => res.json());
+
+    console.log(selectedAddrData);
+    
     if (!selectedAddress) {
       Swal.fire("Address Required", "Please select an address", "error");
       return;
@@ -99,7 +104,12 @@ export default function PaymentPage() {
           address_id: selectedAddress,
           payment_method: method,
           order_status: method === "cod" ? "success" : "pending",
-          shipping: shipping,
+          name: selectedAddrData.name,
+          email: selectedAddrData.email,
+          city: selectedAddrData.city,
+          state: selectedAddrData.state,
+          shipping_address: selectedAddrData.address,
+          //shipping: shipping,
           pincode: params.get("pincode"),
         }),
       });
@@ -214,6 +224,41 @@ export default function PaymentPage() {
                 <span className="text-sm font-medium">{user.name}</span>
                 <ChevronDown className={`h-4 w-4 ${isUserMenuOpen ? "rotate-180" : ""}`} />
               </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 shadow-lg rounded-md border dark:border-zinc-700 z-50 overflow-hidden">
+                  {/* My Profile link */}
+                  {/* <a
+                                    href={`/profile?userId=${user.id}`} // GET parameter se user id pass karenge
+                                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                                    onClick={() => setIsUserMenuOpen(false)}
+                                  >
+                                    My Profile
+                                  </a> */}
+
+                  <a
+                    href={`/profile/${user.id}`} // path param
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    My Profile
+                  </a>
+
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("userId");
+                      localStorage.removeItem("userName");
+                      setUser(null);
+                      setIsUserMenuOpen(false);
+                      Swal.fire("Success", "Logged out successfully", "success");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
