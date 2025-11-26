@@ -244,8 +244,11 @@ export async function GET() {
         product_ids: orders.product_ids,
         quantities: orders.quantities,
 
-        user_name: users.name,
-        email: users.email,
+        // user_name: users.name,
+        // email: users.email,
+        user_name: orders.name ?? users.name,
+        email: orders.email ?? users.email,
+
         customer_id: orders.customerId, // <-- yaha alias add karo
       })
       .from(orders)
@@ -277,7 +280,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("BODY:", body);
 
-     // 1. Get user's email from users table
+    // 1. Get user's email from users table
     const userData = await db
       .select({ email: users.email })
       .from(users)

@@ -32,6 +32,7 @@ export default function AdminOrdersPage() {
     fetch("/api/orders")
       .then((r) => r.json())
       .then((data) => {
+        // console.log("Fetched orders IDs:", data.map((o: any) => o.id)); // ✅ Add this
         setOrders(data ?? []); // <- data is already array
       })
       .catch(() => setOrders([]));
@@ -67,6 +68,7 @@ export default function AdminOrdersPage() {
 
       // Remove from list
       setOrders((prev) => prev.filter((o) => o.id !== id));
+      
 
       // Success message
       Swal.fire({

@@ -16,10 +16,14 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       .select({
         order_id: orders.id,
         user_id: orders.user_id,
-       
 
-        user_name: users.name,
-        email: users.email,
+
+        // user_name: users.name,
+        // email: users.email,
+        user_name: orders.name ?? users.name,
+        email: orders.email ?? users.email,
+        // user_name: users.name,
+        // email: users.email,
 
         // // ✔ users table se correct customer_id
         // customer_id: users.customerId,
@@ -51,7 +55,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       .from(orders)
       .leftJoin(users, eq(orders.user_id, users.id))
       .where(eq(orders.id, orderId));
-      
+
 
     if (!result.length) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
