@@ -18,21 +18,77 @@ export default function Home() {
   const router = useRouter();
   const [cartCount, setCartCount] = useState(0);
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
-  
+
 
 
   //Login Show or Logged in link not show
   const [user, setUser] = useState<{ id: string; name: string } | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  // useEffect(() => {
+  //   if (!userId) return;
+
+  //   const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
+  //   setCartCount(savedCart.length);
+
+  // }, [userId]);
+
+
+  // Replace your current useEffect(...) that initializes user + cart count with this:
+
   useEffect(() => {
-    if (!userId) return;
-  
-    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
-    setCartCount(savedCart.length);
-  
-  }, [userId]);
-  
+    // Function to fetch cart for logged-in user
+    const fetchCartCount = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        // Fetch cart from backend API
+        const res = await fetch(`/api/cart?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch cart");
+
+        const data = await res.json();
+        const items = data.items || [];
+
+        // Calculate total quantity
+        const count = items.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+
+        // Optionally store locally so other tabs can sync
+        localStorage.setItem("cartData", JSON.stringify(items));
+      } catch (error) {
+        console.error("Cart fetch error:", error);
+        setCartCount(0);
+      }
+    };
+
+    // Initial fetch
+    fetchCartCount();
+
+    // Polling every 2s for same-tab updates
+    const interval = setInterval(fetchCartCount, 2000);
+
+    // Listen for storage changes (other tabs)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "cartData") {
+        const cart = JSON.parse(e.newValue || "[]");
+        const count = cart.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+
+  //Load cart//
 
   useEffect(() => {
     fetch("/api/categories")
@@ -256,7 +312,9 @@ export default function Home() {
                       onClick={() => {
                         localStorage.removeItem("userId");
                         localStorage.removeItem("userName");
+                        localStorage.removeItem("cartData"); // optional
                         setUser(null);
+                        setCartCount(0); // immediately update icon
                         setIsUserMenuOpen(false);
                         Swal.fire("Success", "Logged out successfully", "success");
                       }}

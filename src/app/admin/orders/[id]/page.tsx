@@ -26,6 +26,7 @@ export default function OrderDetails() {
         setLoading(false);
       });
   }, [id]);
+  
 
   if (loading) return <div className="p-6 text-center text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
@@ -67,7 +68,7 @@ export default function OrderDetails() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <p><span className="font-semibold">Order ID:</span> #{order.order_id}</p>
-                <p><span className="font-semibold">Customer ID:</span> #{order.customerId}</p>
+                <p><span className="font-semibold">Customer ID:</span> #{order.customer_id}</p>
                 <p><span className="font-semibold">Total Amount:</span> ₹{order.total_amount}</p>
                 <p><span className="font-semibold">Shipping Charge:</span> ₹{order.shipping_charge}</p>
                 <p><span className="font-semibold">Discount:</span> ₹{order.discount}</p>

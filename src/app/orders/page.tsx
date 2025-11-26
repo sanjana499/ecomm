@@ -18,57 +18,69 @@ export default function AdminOrdersPage() {
   //     .catch(() => setOrders([]));
   // }, []);
 
+  // useEffect(() => {
+  //   fetch("/api/orders")
+  //     .then((r) => r.json())
+  //     .then((data) => {
+  //       // If API returns { success: true, orders: [...] }
+  //       setOrders(data.orders ?? []);
+  //     })
+  //     .catch(() => setOrders([]));
+  // }, []);
+
   useEffect(() => {
-  fetch("/api/orders")
-    .then((r) => r.json())
-    .then((data) => {
-      // If API returns { success: true, orders: [...] }
-      setOrders(data.orders ?? []);
-    })
-    .catch(() => setOrders([]));
-}, []);
+    fetch("/api/orders")
+      .then((r) => r.json())
+      .then((data) => {
+        setOrders(data ?? []); // <- data is already array
+      })
+      .catch(() => setOrders([]));
+  }, []);
 
 
-  const handleDelete = (id: number) => {
-  // Show confirmation dialog
-  Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Yes, delete it!",
-    cancelButtonText: "Cancel",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // Delete API call
-      fetch(`/api/orders/${id}`, { method: "DELETE" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.error) {
-            // Remove from state
-            setOrders(orders.filter((o) => o.id !== id));
+  const handleDelete = async (id: number) => {
+    try {
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+      });
 
-            // Success alert
-            Swal.fire({
-              title: "Deleted!",
-              text: "Order has been deleted.",
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false,
-            });
-          } else {
-            // Error alert
-            Swal.fire("Error", data.error, "error");
-          }
-        })
-        .catch(() => {
-          Swal.fire("Error", "Failed to delete order", "error");
-        });
+      // User cancelled
+      if (!result.isConfirmed) return;
+
+      // 👇 DELETE API CALL
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        return Swal.fire("Error", data.error, "error");
+      }
+
+      // Remove from list
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+
+      // Success message
+      Swal.fire({
+        title: "Deleted!",
+        text: "Order has been deleted.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire("Error", "Failed to delete order", "error");
     }
-  });
-};
+  };
+
 
   return (
     <div className="flex bg-white text-gray-800 min-h-screen">
@@ -122,7 +134,7 @@ export default function AdminOrdersPage() {
                           <Edit2 size={16} />
                         </button>
                         <button
-                          onClick={() =>  handleDelete(o.id)}
+                          onClick={() => handleDelete(o.id)}
                           className="text-red-600 hover:text-red-800"
                           title="Delete Order"
                         >

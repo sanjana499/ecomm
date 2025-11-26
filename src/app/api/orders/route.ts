@@ -246,6 +246,7 @@ export async function GET() {
 
         user_name: users.name,
         email: users.email,
+        customer_id: orders.customerId, // <-- yaha alias add karo
       })
       .from(orders)
       .leftJoin(addresses, eq(orders.address_id, addresses.id))

@@ -1,12 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { XCircle } from "lucide-react";
 
 export default function SuccessOrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+
+    useEffect(() => {
+    // Show SweetAlert only once
+    Swal.fire({
+      title: "Order Placed Successfully!",
+      text: "Thank you for shopping with us! Your order has been placed and will be delivered soon.",
+      icon: "success",
+      timer: 3000, // 3 sec auto close
+      showConfirmButton: false,
+    });
+
+    // Redirect to home after 5 sec
+    const timer = setTimeout(() => {
+      router.push("/");
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [router]);
 
     useEffect(() => {
         async function fetchOrders() {
