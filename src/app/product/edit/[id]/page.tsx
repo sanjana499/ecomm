@@ -10,6 +10,9 @@ export default function EditProductPage() {
   const router = useRouter();
   const { id } = useParams();
 
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+
   const [form, setForm] = useState({
     title: "",
     price: "",
@@ -29,6 +32,27 @@ export default function EditProductPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    setCategories(data);
+  };
+
+  const fetchSubcategories = async (categoryId: string) => {
+    if (!categoryId) {
+      setSubcategories([]);
+      return;
+    }
+    const res = await fetch(`/api/sub_categories?categoryId=${categoryId}`);
+    const data = await res.json();
+    setSubcategories(data);
+  };
+
   // ✅ Load product data
   useEffect(() => {
     async function fetchProduct() {
@@ -36,9 +60,12 @@ export default function EditProductPage() {
         const res = await fetch(`/api/product/${id}`);
         const data = await res.json();
         const p = data.product || data;
+        console.log("PRODUCT FROM API ===>", p);
 
         setForm({
           title: p.title || "",
+          category_id: p.category_id?.toString() || "",
+          sub_category_id: p.sub_category_id?.toString() || "",
           price: p.price || "",
           offerPrice: p.offerPrice || "",
           quantity: p.quantity || "",
@@ -48,11 +75,15 @@ export default function EditProductPage() {
           size: p.size || "",
           type: p.type || "",
           gender: p.gender || "",
-          category_id: p.category_id?.toString() || "",
-          sub_category_id: p.sub_category_id?.toString() || "",
           img: null,
         });
+        fetchSubcategories(p.category_id);
+
         setPreview(p.img || null);
+        // ⭐ Load subcategories for selected category
+        if (p.category_id) {
+          fetchSubcategories(p.category_id);
+        }
       } catch {
         Swal.fire("Error", "Failed to load product details", "error");
       } finally {
@@ -121,6 +152,48 @@ export default function EditProductPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* ✅ 3 columns grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Category Dropdown */}
+              <select
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+                value={form.category_id}
+                onChange={(e) => {
+                  const selectedCategory = e.target.value;
+
+                  setForm({
+                    ...form,
+                    category_id: selectedCategory,
+                    sub_category_id: "",   // reset
+                  });
+
+                  fetchSubcategories(selectedCategory); // load subcategories
+                }}
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Subcategory Dropdown */}
+              <select
+                className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+                value={form.sub_category_id}
+                onChange={(e) =>
+                  setForm({ ...form, sub_category_id: e.target.value })
+                }
+                disabled={!form.category_id}    // disable until category chosen
+              >
+                <option value="">Select Subcategory</option>
+                {subcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+
               <input
                 name="title"
                 value={form.title}
@@ -150,20 +223,53 @@ export default function EditProductPage() {
                 placeholder="Quantity"
                 className="border p-2 rounded w-full"
               />
-              <input
+              {/* <input
                 name="color"
                 value={form.color}
                 onChange={handleChange}
                 placeholder="Color"
                 className="border p-2 rounded w-full"
-              />
-              <input
+              /> */}
+              <select
+                className="border p-2 rounded w-full"
+                value={form.color}
+                onChange={(e) =>
+                  setForm({ ...form, color: e.target.value })
+                }
+              >
+                <option value="">Select Color</option>
+                <option value="Red">Red</option>
+                <option value="Blue">Blue</option>
+                <option value="Green">Green</option>
+                <option value="Black">Black</option>
+                <option value="White">White</option>
+                <option value="Brown">Brown</option>
+                <option value="Grey">Grey</option>
+              </select>
+
+              {/* <input
                 name="size"
                 value={form.size}
                 onChange={handleChange}
                 placeholder="Size"
                 className="border p-2 rounded w-full"
-              />
+              /> */}
+
+              <select
+                className="border p-2 rounded w-full"
+                value={form.size}
+                onChange={(e) =>
+                  setForm({ ...form, size: e.target.value })
+                }
+              >
+                <option value="">Select Size</option>
+                {["S", "M", "L", "XL", "XXL", "XXXL"].map((sz) => (
+                  <option key={sz} value={sz}>
+                    {sz}
+                  </option>
+                ))}
+              </select>
+
 
               {/* ✅ Type dropdown */}
               <div>

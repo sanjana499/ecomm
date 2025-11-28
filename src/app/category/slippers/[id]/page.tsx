@@ -1,5 +1,5 @@
 "use client";
-import { useParams ,useRouter} from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
@@ -34,14 +34,70 @@ export default function SlippersPage() {
   const [user, setUser] = useState<{ id: string; name: string } | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  // useEffect(() => {
+  //   if (!userId) return;
+
+  //   const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
+  //   setCartCount(savedCart.length);
+
+  // }, [userId]);
+
+  // Replace your current useEffect(...) that initializes user + cart count with this:
+
   useEffect(() => {
-    if (!userId) return;
-  
-    const savedCart = JSON.parse(localStorage.getItem(`cart_${userId}`) || "[]");
-    setCartCount(savedCart.length);
-  
-  }, [userId]);
-  
+    // Function to fetch cart for logged-in user
+    const fetchCartCount = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        // Fetch cart from backend API
+        const res = await fetch(`/api/cart?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch cart");
+
+        const data = await res.json();
+        const items = data.items || [];
+
+        // Calculate total quantity
+        const count = items.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+
+        // Optionally store locally so other tabs can sync
+        localStorage.setItem("cartData", JSON.stringify(items));
+      } catch (error) {
+        console.error("Cart fetch error:", error);
+        setCartCount(0);
+      }
+    };
+
+    // Initial fetch
+    fetchCartCount();
+
+    // Polling every 2s for same-tab updates
+    const interval = setInterval(fetchCartCount, 2000);
+
+    // Listen for storage changes (other tabs)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "cartData") {
+        const cart = JSON.parse(e.newValue || "[]");
+        const count = cart.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+
+  //Load cart//
+
 
   useEffect(() => {
     if (!subcategoryId) return;
@@ -236,7 +292,7 @@ export default function SlippersPage() {
             className="hidden md:block border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
           />
 
-<button
+          <button
             className="relative"
             onClick={() => router.push("/cart")}
           >
@@ -287,6 +343,7 @@ export default function SlippersPage() {
                       localStorage.removeItem("userId");
                       localStorage.removeItem("userName");
                       setUser(null);
+                      setCartCount(0);
                       setIsUserMenuOpen(false);
                       Swal.fire("Success", "Logged out successfully", "success");
                     }}

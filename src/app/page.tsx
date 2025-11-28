@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, Key } from "react";
-import { ShoppingCart, User, Menu, ChevronDown, ChevronRight } from "lucide-react";
+import { ShoppingCart, User, Menu, ChevronDown, ChevronRight, Heart, Tag, Bell, Gift, Coins, Power, LogOut } from "lucide-react";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 
@@ -298,14 +298,73 @@ export default function Home() {
                     >
                       My Profile
                     </a> */}
-
+                  {/*My Profile*/}
                     <a
                       href={`/profile/${user.id}`} // path param
-                      className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
+                      <User className="w-4 h-4" />
                       My Profile
                     </a>
+
+
+                    {/*Orders*/}
+                    <a
+                    href="/orders"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Orders
+                    </a>
+
+                    {/*Wishlist*/}
+                    <a
+                    href="/whislist"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Heart className="w-4 h-4" /> Wishlist
+                    </a>
+
+                    {/* Coupons] */}
+                    
+                    <a
+                    href="/coupons"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Tag className="w-4 h-4" />Coupon
+                    </a>
+
+                    {/*Notifications*/}
+                    <a
+                    href="/notifications"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Bell  className="w-4 h-4"  />Notifications
+                    </a>
+
+                    {/*Gift Card*/}
+                    <a
+                    href="/gift-card"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Gift className="w-4 h-4"/>Gift Card
+                    </a>
+
+                    {/* Supercoins */}
+                    <a
+                    href="/supercoins"
+                    className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Coins className="w-4 h-4"/> Supercoins
+                    </a>
+
 
                     {/* Logout */}
                     <button
@@ -318,9 +377,8 @@ export default function Home() {
                         setIsUserMenuOpen(false);
                         Swal.fire("Success", "Logged out successfully", "success");
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
-                    >
-                      Logout
+                      className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-2"                    >
+                      <LogOut className="w-4 h-4"/>Logout
                     </button>
                   </div>
                 )}

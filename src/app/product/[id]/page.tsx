@@ -117,6 +117,62 @@ export default function ProductDetails() {
     if (storedId && storedName) setUser({ id: storedId, name: storedName });
   }, []);
 
+    // Replace your current useEffect(...) that initializes user + cart count with this:
+
+  useEffect(() => {
+    // Function to fetch cart for logged-in user
+    const fetchCartCount = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        // Fetch cart from backend API
+        const res = await fetch(`/api/cart?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch cart");
+
+        const data = await res.json();
+        const items = data.items || [];
+
+        // Calculate total quantity
+        const count = items.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+
+        // Optionally store locally so other tabs can sync
+        localStorage.setItem("cartData", JSON.stringify(items));
+      } catch (error) {
+        console.error("Cart fetch error:", error);
+        setCartCount(0);
+      }
+    };
+
+    // Initial fetch
+    fetchCartCount();
+
+    // Polling every 2s for same-tab updates
+    const interval = setInterval(fetchCartCount, 2000);
+
+    // Listen for storage changes (other tabs)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "cartData") {
+        const cart = JSON.parse(e.newValue || "[]");
+        const count = cart.reduce((sum: any, item: { quantity: any; }) => sum + (item.quantity ?? 1), 0);
+        setCartCount(count);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+
+  //Load cart//
+
 
   if (loading)
     return <p className="text-center mt-10 text-gray-500">Loading product...</p>;
@@ -251,6 +307,7 @@ export default function ProductDetails() {
                       localStorage.removeItem("userId");
                       localStorage.removeItem("userName");
                       setUser(null);
+                      setCartCount(0);
                       setIsUserMenuOpen(false);
                       Swal.fire("Success", "Logged out successfully", "success");
                     }}
@@ -285,7 +342,7 @@ export default function ProductDetails() {
           {/* Image */}
           <div className="relative w-full h-96">
             <Image
-              src={product.img?.startsWith("/upload") ? product.img : `/upload/${product.img}`}
+              src={product.img?.startsWith("/uploads") ? product.img : `/uploads/${product.img}`}
               alt={product.title}
               fill
               className="object-contain"

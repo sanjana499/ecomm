@@ -95,39 +95,39 @@ export const addresses = mysqlTable("addresses", {
   pincode: varchar("pincode", { length: 20 }),
 });
 
-export const orders = mysqlTable("orders", {
-  id: serial("id").primaryKey(),
-  user_id: int("user_id").notNull(),
-  transaction_id: varchar("transaction_id", { length: 255 }),  // ✅ FIXED
-  email: varchar("email", { length: 255 }),
-  name: varchar("name", { length: 255 }),
-  total_amount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
-  // order_id: int("order_id").notNull(),
-  customerId: varchar("customer_id", { length: 20 }).notNull(),
-  order_status: varchar("order_status", { length: 50 }).default("pending"),
-  payment_method: varchar("payment_method", { length: 50 }).default("cod"),
-  product_ids: text("product_ids").notNull(),
-  quantities: text("quantities").notNull(),
-  items: text("items").notNull(),
-  address_id: int("address_id"),
-  shipping_address: text("shipping_address"),
-  city: varchar("city", { length: 255 }),
-  state: varchar("state", { length: 255 }),
-  pincode: varchar("pincode", { length: 20 }),
-  shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
-  discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
-  created_at: timestamp("created_at").defaultNow(),
-});
+  export const orders = mysqlTable("orders", {
+    id: serial("id").primaryKey(),
+    user_id: int("user_id").notNull(),
+    transaction_id: varchar("transaction_id", { length: 255 }),  // ✅ FIXED
+    email: varchar("email", { length: 255 }),
+    name: varchar("name", { length: 255 }),
+    total_amount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+    // order_id: int("order_id").notNull(),
+    customerId: varchar("customer_id", { length: 20 }).notNull(),
+    order_status: varchar("order_status", { length: 50 }).default("pending"),
+    payment_method: varchar("payment_method", { length: 50 }).default("cod"),
+    product_ids: text("product_ids").notNull(),
+    quantities: text("quantities").notNull(),
+    items: text("items").notNull(),
+    address_id: int("address_id"),
+    shipping_address: text("shipping_address"),
+    city: varchar("city", { length: 255 }),
+    state: varchar("state", { length: 255 }),
+    pincode: varchar("pincode", { length: 20 }),
+    shipping_charge: decimal("shipping_charge", { precision: 10, scale: 2 }).default("0"),
+    discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
+    created_at: timestamp("created_at").defaultNow(),
+  });
 
-export const order_items = mysqlTable("order_items", {
-  id: serial("id").primaryKey(),
-  order_id: int("order_id").notNull(),
-  product_id: int("product_id").notNull(),
-  //price: decimal("price", { precision: 12, scale: 2 }).notNull(),
-  price: decimal("price", { precision: 12, scale: 2 }).notNull(),
-  quantity: int("quantity").notNull(),
-  //total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
-  total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
-});
+  export const order_items = mysqlTable("order_items", {
+    id: serial("id").primaryKey(),
+    order_id: int("order_id").notNull(),
+    product_id: int("product_id").notNull(),
+    //price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+    price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+    quantity: int("quantity").notNull(),
+    //total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+    total_price: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  });
 
 

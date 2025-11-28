@@ -33,6 +33,8 @@ export default function PaymentPage() {
   const cartCount = cartItems.length;
   const [cart, setCart] = useState<any[]>([]);
 
+  const [discount, setDiscount] = useState(0);
+
 
   useEffect(() => {
     const storedCart = localStorage.getItem("cartData");
@@ -47,6 +49,8 @@ export default function PaymentPage() {
     setShipping(Number(params.get("shipping") || 0));
     setPlatformFee(Number(params.get("platformFee") || 0));
     setTotal(Number(params.get("total") || 0));
+
+    setDiscount(Number(params.get("discount") || 0)); // <-- yaha
 
     const addr = params.get("addressId");
     if (addr) {
@@ -81,7 +85,7 @@ export default function PaymentPage() {
     const selectedAddrData = await fetch(`/api/address/${selectedAddress}`).then(res => res.json());
 
     console.log(selectedAddrData);
-    
+
     if (!selectedAddress) {
       Swal.fire("Address Required", "Please select an address", "error");
       return;
@@ -118,7 +122,7 @@ export default function PaymentPage() {
 
       if (res.ok) {
         Swal.fire("Order Placed!", "Your order was successful!", "success");
-        router.push("/orders/success");
+        router.push(`/orders/success?orderId=${data.orderId}`);
       } else {
         Swal.fire("Error", data.error || "Order failed!", "error");
       }
@@ -346,37 +350,80 @@ export default function PaymentPage() {
         </div>
 
         {/* RIGHT – SUMMARY */}
+        {/* ---------------- RIGHT – ORDER SUMMARY ---------------- */}
         <div className="w-1/3">
           <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
 
-          <div className="bg-blue-50 p-5 rounded-2xl shadow-md">
-            <div className="flex justify-between text-gray-700">
-              <p>Price</p>
-              <p>₹{subtotal.toFixed(2)}</p>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>{shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}</span>
+          <div className="bg-blue-50 p-5 rounded-2xl shadow-md flex flex-col space-y-4 max-h-[500px] overflow-y-auto">
+            {/* 1️⃣ Order Items */}
+            <div>
+              <h4 className="font-semibold text-lg mb-2">Items ({cartItems.length})</h4>
+              <div className="space-y-2">
+                {cartItems.map((item,index) => (
+                  <div key={`${item.productId}-${index}`}  className="flex justify-between items-center border-b pb-2">
+                    <div className="flex flex-col">
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-medium">₹{((item.offerPrice || item.price) * item.quantity).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex justify-between mt-3 text-gray-700">
-              <p>Platform Fee</p>
-              <p>₹{platformFee.toFixed(2)}</p>
+            {/* 2️⃣ Subtotals */}
+            <div className="border-t pt-2 space-y-1 text-gray-700 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span>{shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Platform Fee</span>
+                <span>₹{platformFee.toFixed(2)}</span>
+              </div>
+              {/** Optional discount */}
+              {discount && Number(discount) > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>-₹{Number(discount).toFixed(2)}</span>
+                </div>
+              )}
             </div>
 
-            <hr className="my-4" />
-
-            <div className="flex justify-between font-bold text-blue-700 text-xl">
-              <p>Total</p>
-              <p>₹{total}</p>
+            {/* 3️⃣ Total */}
+            <div className="border-t pt-2 flex justify-between font-bold text-blue-700 text-lg">
+              <span>Total</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
-          </div>
 
-          <div className="bg-green-100 p-5 rounded-2xl mt-5 shadow-md">
-            <p className="font-semibold text-green-800">5% Cashback</p>
-            <p className="text-sm text-green-700 mt-1">Claim now with payment offers</p>
+            {/* 4️⃣ Shipping Address */}
+            {selectedAddress && (
+              <div className="border-t pt-2 text-sm space-y-1">
+                <p className="font-semibold">Shipping To:</p>
+                <p>{selectedAddress}</p>
+                {/** Optionally: City, State, Pincode */}
+                {params.get("city") && <p>{params.get("city")}, {params.get("state")} - {params.get("pincode")}</p>}
+              </div>
+            )}
+
+            {/* 5️⃣ Payment Method */}
+            <div className="border-t pt-2 text-sm flex justify-between items-center">
+              <span>Payment Method</span>
+              <span className="font-medium">{selectedMethod.toUpperCase()}</span>
+            </div>
+
+            {/* 6️⃣ Optional: Cashback / Offer */}
+            <div className="bg-green-100 p-3 rounded-lg mt-2 shadow-sm text-green-800 text-sm">
+              <p className="font-semibold">5% Cashback</p>
+              <p className="mt-1">Claim now with payment offers</p>
+            </div>
           </div>
         </div>
+
       </div>
 
     </div>

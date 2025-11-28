@@ -24,6 +24,8 @@ export default function ProductPage() {
     desc: "",
     color: "",
     size: "",
+    type: "",
+    gender: ""
   });
 
   // Fetch categories on mount
@@ -62,6 +64,8 @@ export default function ProductPage() {
     form.append("desc", formData.desc);
     form.append("color", formData.color);
     form.append("size", formData.size);
+    form.append("type", formData.type);
+    form.append("gender", formData.gender)
 
     // ✅ Must match backend name exactly: "img"
     if (image) form.append("img", image);
@@ -236,6 +240,8 @@ export default function ProductPage() {
               <option value="Green">Green</option>
               <option value="Black">Black</option>
               <option value="White">White</option>
+              <option value="Brown">Brown</option>
+              <option value="Grey">Grey</option>
             </select>
 
             {/* Size */}
@@ -251,6 +257,41 @@ export default function ProductPage() {
               <option value="M">M</option>
               <option value="L">L</option>
               <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+              <option value="XXXL">XXXl</option>
+            </select>
+
+
+            {/* ✅ Type dropdown */}
+            <select
+              value={formData.type}
+              // onChange={handleChange}
+              onChange={(e) =>
+                setFormData({ ...formData, type: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+            >
+              <option value="">Select Type</option>
+              <option value="casual">Casual</option>
+              <option value="sports">Sports</option>
+              <option value="formal">Formal</option>
+              <option value="party">Party</option>
+            </select>
+
+            {/* ✅ Gender dropdown */}
+            <select
+              value={formData.gender}
+              // onChange={handleChange}
+              onChange={(e) =>
+                setFormData({ ...formData, gender: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+            >
+              <option value="">Select Gender</option>
+              <option value="men">Men</option>
+              <option value="women">Women</option>
+              <option value="kids">Kids</option>
+              <option value="unisex">Unisex</option>
             </select>
 
             {/* Description */}

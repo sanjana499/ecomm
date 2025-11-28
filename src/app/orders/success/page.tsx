@@ -11,23 +11,23 @@ export default function SuccessOrdersPage() {
     const router = useRouter();
 
 
-    useEffect(() => {
-    // Show SweetAlert only once
-    Swal.fire({
-      title: "Order Placed Successfully!",
-      text: "Thank you for shopping with us! Your order has been placed and will be delivered soon.",
-      icon: "success",
-      timer: 3000, // 3 sec auto close
-      showConfirmButton: false,
-    });
+    //     useEffect(() => {
+    //     // Show SweetAlert only once
+    //     Swal.fire({
+    //       title: "Order Placed Successfully!",
+    //       text: "Thank you for shopping with us! Your order has been placed and will be delivered soon.",
+    //       icon: "success",
+    //       timer: 3000, // 3 sec auto close
+    //       showConfirmButton: false,
+    //     });
 
-    // Redirect to home after 5 sec
-    const timer = setTimeout(() => {
-      router.push("/");
-    }, 5000);
+    //     // Redirect to home after 5 sec
+    //     const timer = setTimeout(() => {
+    //       router.push("/");
+    //     }, 5000);
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    //     return () => clearTimeout(timer);
+    //   }, [router]);
 
     useEffect(() => {
         async function fetchOrders() {
@@ -114,6 +114,16 @@ export default function SuccessOrdersPage() {
 
                 <h1 className="text-3xl font-bold text-green-600 mt-4">Order Placed Successfully!</h1>
                 <p className="text-gray-600 mt-2">  Thank you for shopping with us! Your order has been placed and will be delivered soon.</p>
+
+
+                {orders[0] && (
+                    <button
+                        onClick={() => window.open(`/api/orders/invoice/${orders[0].order_id}`, "_blank")}
+                        className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+                    >
+                        Download Invoice
+                    </button>
+                )}
             </div>
 
             {/* 🧾 Orders List */}

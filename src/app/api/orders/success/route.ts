@@ -13,6 +13,10 @@ export async function GET() {
         created_at: orders.created_at,
         user_id: orders.user_id,
 
+        items: orders.items,
+        product_ids: orders.product_ids,
+        quantities: orders.quantities,
+
         // 👇 Customer Info From users table
         user_name: users.name,
         email: users.email,
@@ -23,12 +27,23 @@ export async function GET() {
       .orderBy(orders.id);
 
     // Parse JSON fields
+    // const parsedData = data.map((order: any) => ({
+    //   ...order,
+    //   items: JSON.parse(order.items ?? "[]"),
+    //   product_ids: order.product_ids ? JSON.parse(order.product_ids) : [],
+    //   quantities: order.quantities ? JSON.parse(order.quantities) : [],
+    // }));
     const parsedData = data.map((order: any) => ({
       ...order,
-      items: JSON.parse(order.items ?? "[]"),
-      product_ids: order.product_ids ? JSON.parse(order.product_ids) : [],
-      quantities: order.quantities ? JSON.parse(order.quantities) : [],
+      items: JSON.parse(order.items ?? "[]"), // Ye sahi hai kyunki tum items ko JSON.stringify karte ho DB me
+      product_ids: order.product_ids
+        ? order.product_ids.split(",").map(Number) // <-- split by comma + convert to number
+        : [],
+      quantities: order.quantities
+        ? order.quantities.split(",").map(Number) // <-- split by comma + convert to number
+        : [],
     }));
+
 
     return NextResponse.json({ success: true, orders: parsedData });
     //return NextResponse.json({ success: true, orders: data });

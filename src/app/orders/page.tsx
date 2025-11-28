@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit2, Trash2 } from "lucide-react";
+import { Download, Edit2, Eye, ReceiptText, Trash2 } from "lucide-react";
 import Sidebar from "@/app/components/Sidebar";
 import Topbar from "@/app/components/Topbar";
 import Swal from "sweetalert2";
@@ -68,7 +68,7 @@ export default function AdminOrdersPage() {
 
       // Remove from list
       setOrders((prev) => prev.filter((o) => o.id !== id));
-      
+
 
       // Success message
       Swal.fire({
@@ -142,6 +142,36 @@ export default function AdminOrdersPage() {
                         >
                           <Trash2 size={16} />
                         </button>
+
+                        {/* ✅ Download Invoice Button */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => window.open(`/orders/invoice/${o.id}`, "_blank")}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-green-600 border border-green-400 hover:bg-green-50 transition-all"
+                          >
+                            <ReceiptText size={16} />
+                            <span className="text-sm font-medium">View</span>
+                          </button>
+
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            Invoice
+                          </span>
+
+                          <button
+                            onClick={() => window.open(`/api/orders/invoice/${o.id}`, "_blank")}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-blue-600 border border-blue-400 hover:bg-blue-50 transition-all"
+                          >
+                            <ReceiptText size={16} />
+                            <span className="text-sm font-medium">Download</span>
+                          </button>
+
+                          
+
+                        </div>
+
+
+
+
                       </td>
                     </tr>
                   ))

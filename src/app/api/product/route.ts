@@ -6,7 +6,8 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { eq ,desc} from "drizzle-orm";
 
-const uploadsDir = "/uploads"; 
+// const uploadsDir = "/uploads"; 
+const uploadsDir = path.join(process.cwd(), "public", "uploads");
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
 
@@ -14,6 +15,7 @@ const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
+    //console.log(formData);
 
     // 🖼️ Handle image
     const file = formData.get("img") as File | null;
